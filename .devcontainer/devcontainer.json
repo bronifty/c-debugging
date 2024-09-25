@@ -1,3 +1,4 @@
+// https://code.visualstudio.com/docs/devcontainers/containers#_create-a-devcontainerjson-file
 {
 	"name": "Existing Dockerfile",
 	"build": {
