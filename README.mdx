@@ -11,7 +11,7 @@ This will work for c and c++. You will need 2 ide extensions, one local (on your
 3. Jump into the repo root and hit `cmd + shift + p` and select `Reopen in Container`.
 4. Install the [CodeLLDB Extension](https://marketplace.visualstudio.com/items?itemName=vadimcn.vscode-lldb) in the container (if not done automatically by the devcontainer.json config file in the root of this repo).
 5. Open any c or c++ file and go to the debugger window `cmd + shift + d`.
-6. Click on the green play button to run the launch configuration `(LLDB) Launch`.
+6. Click on the green play button to run the launch configuration `lldb`.
 
 ## Notes
 
@@ -30,11 +30,12 @@ You will be prompted to install the C++ extension in the container, but it is no
 ## Debugging with LLDB
 
 - lldb means llvm debugger; it hooks into the compiler architecture of llvm which is the next generation of compiler for c/c++
-- clang++ uses llvm and is the compiler for c/c++ 
-- a c/c++ file needs to be compiled with the -g flag to enable debugger metadata, which is then used by lldb 
+- clang++ uses llvm and is the compiler for c/c++
+- a c/c++ file needs to be compiled with the -g flag to enable debugger metadata, which is then used by lldb
 - the launch config does just what a terminal session would do but dynamically for the active file in the ide and it runs the build task (clang++ with -g flag) beforehand to enable debugging in the window for active file.
 
-## Config 
+## Config
+
 ```json
 // launch config
 {
@@ -46,11 +47,10 @@ You will be prompted to install the C++ extension in the container, but it is no
       "request": "launch",
       "program": "${fileDirname}/${fileBasenameNoExtension}",
       "cwd": "${workspaceFolder}", // Current working directory
-      "preLaunchTask": "clang++",
-    },
+      "preLaunchTask": "clang++"
+    }
   ]
 }
-
 ```
 
 ```json
@@ -68,9 +68,8 @@ You will be prompted to install the C++ extension in the container, but it is no
         "${file}", // Current file
         "-o",
         "${fileDirname}/${fileBasenameNoExtension}" // Output executable
-      ],
+      ]
     }
   ]
 }
-
 ```
