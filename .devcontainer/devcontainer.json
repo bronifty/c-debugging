@@ -6,10 +6,8 @@
     "dockerfile": "../Dockerfile"
   },
   "customizations": {
-    // Configure properties specific to VS Code.
     "vscode": {
-      // Add the IDs of extensions you want installed when the container is created.
-      "extensions": ["ms-vscode.cpptools-extension-pack", "vadimcn.vscode-lldb"]
+      "extensions": ["vadimcn.vscode-lldb"]
     }
   }
 }
