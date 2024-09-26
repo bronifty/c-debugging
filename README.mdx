@@ -6,6 +6,20 @@ This will work for c and c++.
 
 1. Install the Remote Container Extension
 2. Jump into the repo root with Dockerfile and .devcontainer folder and hit `cmd + shift + p` and select `Reopen in Container`.
-3. Depending on whether you are using intel chip or apple silicon or something else, whether it's vs code or cursor, your mileage may vary regarding the auto-install of the required extension. Nevertheless, the extension is required to run the debugger inside the container. So once you are in there, make sure it's installed. It will likely prompt you to install it (it requires the "C/C++ Extension Pack"; it's technical name is listed in the devcontainer.json file)
+3. Install extensions listed in the devcontainer.json file (c/c++ and lldb).
 4. Open any c or c++ file and go to the debugger window (cmd + shift + d).
-5. Click on the green play button to run the program (the configuration will be named "Debug C/C++").
+5. Click on the green play button to run the program (the configuration will be named "LLDB Launch").
+
+## Notes
+
+C++ is a superset of C, just extern C functions in C++ files due to the way C++ handles overloading.
+
+```cpp
+    extern "C" {
+        void my_c_function();
+    }
+```
+
+## Warning
+
+The debug config relies on both of the vs code extensions. It will fail without them. 

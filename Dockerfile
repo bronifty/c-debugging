@@ -13,6 +13,7 @@ RUN apt-get update && apt-get install -y \
     git \
     curl \
     vim \
+    lldb \
     && rm -rf /var/lib/apt/lists/*
 
 # [Optional] Create a non-root user (e.g., vscode) with sudo privileges

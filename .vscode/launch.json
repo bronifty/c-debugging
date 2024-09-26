@@ -2,21 +2,20 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Debug C/C++",
-      "type": "cppdbg",
+      "name": "(LLDB) Launch",
+      "type": "lldb",
       "request": "launch",
       "program": "${fileDirname}/${fileBasenameNoExtension}",
-      "args": [],
-      "stopAtEntry": false,
-      "cwd": "${workspaceFolder}",
+      "args": [], // Program arguments
+      "cwd": "${workspaceFolder}", // Current working directory
+      "preLaunchTask": "Build C++", // Ensure the build task is run before debugging
+      "stopOnEntry": false, // Set to true if you want to break at the program entry
       "environment": [],
-      "externalConsole": false,
-      "MIMode": "gdb",
-      "miDebuggerPath": "/usr/bin/gdb",
-      "preLaunchTask": "build",
+      "externalConsole": false, // Set to true to use an external terminal
+      "MIMode": "lldb",
       "setupCommands": [
         {
-          "description": "Enable pretty-printing for gdb",
+          "description": "Enable pretty-printing for std:: containers",
           "text": "-enable-pretty-printing",
           "ignoreFailures": true
         }

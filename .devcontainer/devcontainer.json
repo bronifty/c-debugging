@@ -1,15 +1,15 @@
 // https://code.visualstudio.com/docs/devcontainers/containers#_create-a-devcontainerjson-file
 {
-	"name": "Existing Dockerfile",
-	"build": {
-		"context": "..",
-		"dockerfile": "../Dockerfile"
-	},
-	"customizations": {
+  "name": "Existing Dockerfile",
+  "build": {
+    "context": "..",
+    "dockerfile": "../Dockerfile"
+  },
+  "customizations": {
     // Configure properties specific to VS Code.
     "vscode": {
       // Add the IDs of extensions you want installed when the container is created.
-      "extensions": ["ms-vscode.cpptools-extension-pack"]
+      "extensions": ["ms-vscode.cpptools-extension-pack", "vadimcn.vscode-lldb"]
     }
   }
 }
