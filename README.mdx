@@ -36,6 +36,8 @@ You will be prompted to install the C++ extension in the container, but it is no
 
 ## Config
 
+- .vscode/launch.json
+
 ```json
 // launch config
 {
@@ -52,6 +54,8 @@ You will be prompted to install the C++ extension in the container, but it is no
   ]
 }
 ```
+
+- .vscode/tasks.json
 
 ```json
 // build task
@@ -102,4 +106,22 @@ RUN update-alternatives --install /usr/bin/python python /usr/bin/python3 10
 
 CMD ["bash"]
 
+```
+
+-- .devcontainer/devcontainer.json
+
+```json
+// https://code.visualstudio.com/docs/devcontainers/containers#_create-a-devcontainerjson-file
+{
+  "name": "Existing Dockerfile",
+  "build": {
+    "context": "..",
+    "dockerfile": "../Dockerfile"
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": ["vadimcn.vscode-lldb"]
+    }
+  }
+}
 ```
