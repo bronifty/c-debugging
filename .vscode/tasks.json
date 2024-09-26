@@ -2,9 +2,9 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "Build C++",
+      "label": "clang++",
       "type": "shell",
-      "command": "/usr/bin/g++",
+      "command": "/usr/bin/clang++",
       "args": [
         "-std=c++17", // Specify C++ standard
         "-g", // Generate debug information
@@ -12,12 +12,6 @@
         "-o",
         "${fileDirname}/${fileBasenameNoExtension}" // Output executable
       ],
-      "group": {
-        "kind": "build",
-        "isDefault": true
-      },
-      "problemMatcher": ["$gcc"],
-      "detail": "Build task for compiling C++ files using g++."
     }
   ]
 }

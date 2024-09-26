@@ -26,3 +26,51 @@ C++ is a superset of C, just extern C functions in C++ files due to the way C++ 
 :::warning
 You will be prompted to install the C++ extension in the container, but it is not strictly necessary with this setup.
 :::
+
+## Debugging with LLDB
+
+- lldb means llvm debugger; it hooks into the compiler architecture of llvm which is the next generation of compiler for c/c++
+- clang++ uses llvm and is the compiler for c/c++ 
+- a c/c++ file needs to be compiled with the -g flag to enable debugger metadata, which is then used by lldb 
+- the launch config does just what a terminal session would do but dynamically for the active file in the ide and it runs the build task (clang++ with -g flag) beforehand to enable debugging in the window for active file.
+
+## Config 
+```json
+// launch config
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "lldb",
+      "type": "lldb",
+      "request": "launch",
+      "program": "${fileDirname}/${fileBasenameNoExtension}",
+      "cwd": "${workspaceFolder}", // Current working directory
+      "preLaunchTask": "clang++",
+    },
+  ]
+}
+
+```
+
+```json
+// build task
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "clang++",
+      "type": "shell",
+      "command": "/usr/bin/clang++",
+      "args": [
+        "-std=c++17", // Specify C++ standard
+        "-g", // Generate debug information
+        "${file}", // Current file
+        "-o",
+        "${fileDirname}/${fileBasenameNoExtension}" // Output executable
+      ],
+    }
+  ]
+}
+
+```
