@@ -14,15 +14,7 @@ RUN apt-get update && apt-get install -y \
     curl \
     vim \
     lldb \
-    python3 \
-    python3-pip \
     && rm -rf /var/lib/apt/lists/*
-
-# Upgrade pip to the latest version
-RUN pip3 install --upgrade pip
-
-# Install Python packages required for data visualization
-RUN pip3 install matplotlib numpy
 
 # [Optional] Create a non-root user (e.g., vscode) with sudo privileges
 # This step is optional and can be omitted for minimal setups
@@ -32,9 +24,5 @@ RUN pip3 install matplotlib numpy
 #     && echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers \
 #     && rm -rf /var/lib/apt/lists/*
 
-# Set Python 3 as the default python
-RUN update-alternatives --install /usr/bin/python python /usr/bin/python3 10
-
 # Set the default command to bash
 CMD ["bash"]
-
