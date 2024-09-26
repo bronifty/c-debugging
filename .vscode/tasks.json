@@ -6,12 +6,12 @@
       "type": "shell",
       "command": "/usr/bin/clang++",
       "args": [
-        "-std=c++17", // Specify C++ standard
-        "-g", // Generate debug information
-        "${file}", // Current file
+        "-std=c++17",
+        "-g",
+        "${file}",
         "-o",
-        "${fileDirname}/${fileBasenameNoExtension}" // Output executable
-      ],
+        "${fileDirname}/${fileBasenameNoExtension}"
+      ]
     }
   ]
 }

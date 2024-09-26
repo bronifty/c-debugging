@@ -6,8 +6,8 @@
       "type": "lldb",
       "request": "launch",
       "program": "${fileDirname}/${fileBasenameNoExtension}",
-      "cwd": "${workspaceFolder}", // Current working directory
-      "preLaunchTask": "clang++",
-    },
+      "cwd": "${workspaceFolder}",
+      "preLaunchTask": "clang++"
+    }
   ]
 }
