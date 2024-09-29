@@ -1,0 +1,42 @@
+# pod.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: busy-knuth
+  labels:
+    app: busy-knuth
+spec:
+  containers:
+    - name: busy-knuth-container
+      image: vsc-c-debugging-5cb14d97b6647bd269ce259609f58817373ef5391aca3ec3e9aa7ef80b9aad99
+      command: ["/bin/sh"]
+      args:
+        - "-c"
+        - |
+          echo Container started
+          trap "exit 0" 15
+
+          exec "$@"
+          while sleep 1 & wait $!; do :; done
+        - "-"
+      env:
+        - name: PATH
+          value: "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+        - name: DEBIAN_FRONTEND
+          value: "noninteractive"
+      volumeMounts:
+        - name: c-debugging
+          mountPath: /workspaces/c-debugging
+        - name: vscode
+          mountPath: /vscode
+      stdin: false
+      tty: false
+  restartPolicy: Never
+  volumes:
+    - name: c-debugging
+      hostPath:
+        path: /Users/bronifty/codes/temp/c-debugging
+        type: Directory
+    - name: vscode
+      persistentVolumeClaim:
+        claimName: vscode-pvc

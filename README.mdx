@@ -125,3 +125,16 @@ CMD ["bash"]
   }
 }
 ```
+
+## Kubern
+
+```sh
+   docker tag vsc-c-debugging-5cb14d97b6647bd269ce259609f58817373ef5391aca3ec3e9aa7ef80b9aad99 busy-knuth:latest
+```
+
+```sh
+kubectl apply -f pvc.yaml
+kubectl apply -f deployment.yaml
+kubectl get pods
+kubectl exec -it busy-knuth -- /bin/sh
+```
