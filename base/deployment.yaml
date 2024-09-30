@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: busy-knuth-container
-          image: busy-knuth:latest
+          image: ghcr.io/bronifty/busy-knuth:latest
           imagePullPolicy: IfNotPresent
           command: ["/bin/sh"]
           args:
