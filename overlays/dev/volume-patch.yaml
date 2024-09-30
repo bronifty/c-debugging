@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: busy-knuth-deployment
+  name: ubuntu22-debug-c-deployment
 spec:
   template:
     spec:

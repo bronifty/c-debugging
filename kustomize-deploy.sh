@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Build the Dockerfile image locally while I figure out how to make ghcr.io/bronifty/busy-knuth:latest public
-docker build -t busy-knuth:latest .
+# Build the docker image
+docker build -t ubuntu22-debug-c .
 
 # Set the current directory
 CURRENT_DIR=$(pwd)

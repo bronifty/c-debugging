@@ -1,20 +1,20 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: busy-knuth-deployment
+  name: ubuntu22-debug-c-deployment
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: busy-knuth
+      app: ubuntu22-debug-c
   template:
     metadata:
       labels:
-        app: busy-knuth
+        app: ubuntu22-debug-c
     spec:
       containers:
-        - name: busy-knuth-container
-          image: busy-knuth:latest
+        - name: ubuntu22-debug-c-container
+          image: ubuntu22-debug-c:latest
           imagePullPolicy: IfNotPresent
           command: ["/bin/sh"]
           args:
