@@ -3,12 +3,8 @@
 # Set the current directory
 CURRENT_DIR=$(pwd)
 
-# # Print the directory structure
-# echo "Current directory structure:"
-# tree -L 3
-
 # Create a temporary directory for modified files
-TEMP_DIR="$CURRENT_DIR/temp_kustomize_$(date +%s)"
+TEMP_DIR="$CURRENT_DIR/overlays/dev-temp"
 mkdir -p "$TEMP_DIR"
 
 # Copy the original kustomization file to the temp directory
