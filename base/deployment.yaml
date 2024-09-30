@@ -1,4 +1,3 @@
-# deployment.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -16,7 +15,7 @@ spec:
       containers:
         - name: busy-knuth-container
           image: ghcr.io/bronifty/busy-knuth:latest
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Always
           command: ["/bin/sh"]
           args:
             - "-c"
@@ -37,10 +36,12 @@ spec:
               mountPath: /workspaces/c-debugging
             - name: vscode
               mountPath: /vscode
+      imagePullSecrets:
+        - name: ghcr-secret
       volumes:
         - name: c-debugging
           hostPath:
-            path: "{{C_DEBUGGING_PATH}}"
+            path: "/absolute/path/to/placeholder"
             type: Directory
         - name: vscode
           persistentVolumeClaim:

@@ -1,0 +1,12 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: busy-knuth-deployment
+spec:
+  template:
+    spec:
+      volumes:
+        - name: c-debugging
+          hostPath:
+            path: "/absolute/path/to/desired/directory" # This will be replaced
+            type: Directory

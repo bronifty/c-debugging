@@ -126,7 +126,7 @@ CMD ["bash"]
 }
 ```
 
-## Kubern
+## Kubernetes
 
 ```sh
    docker tag vsc-c-debugging-5cb14d97b6647bd269ce259609f58817373ef5391aca3ec3e9aa7ef80b9aad99 busy-knuth:latest
@@ -137,4 +137,157 @@ kubectl apply -f pvc.yaml
 kubectl apply -f deployment.yaml
 kubectl get pods
 kubectl exec -it busy-knuth -- /bin/sh
+```
+
+```sh
+kubectl apply -f deployment.yaml
+kubectl get pods
+kubectl describe pod busy-knuth-deployment-xxxxxxxxxx-yyyyy
+kubectl exec -it busy-knuth-deployment-xxxxxxxxxx-yyyyy -- /bin/bash
+```
+
+```sh
+kubectl get deployments
+kubectl scale deployment busy-knuth-deployment --replicas=0
+kubectl get pods
+kubectl scale deployment busy-knuth-deployment --replicas=1
+kubectl get pods
+kubectl delete pod busy-knuth-deployment-69ffb84b69-lvbm4
+kubectl delete deployment busy-knuth-deployment
+kubectl get deployments
+kubectl delete pods --all
+```
+
+## GHCRIO Registry
+
+Generate a Personal Access Token (PAT):
+Navigate to GitHub Settings.
+Click on "Generate new token".
+Select Scopes:
+For public repositories:
+read:packages
+write:packages
+delete:packages (optional)
+For private repositories:
+All the above scopes.
+Example Name: ghcr-access-token
+Click "Generate token" and copy the token. Note: You won't be able to see it again.
+Login to GHCR via Docker CLI:
+Open your terminal and execute:
+
+```sh
+   echo <YOUR_PAT> | docker login ghcr.io -u bronifty --password-stdin
+
+```
+
+## Build Image
+
+```sh
+   docker build -t busy-knuth:latest .
+```
+
+Tag the image:
+
+```sh
+docker tag busy-knuth:latest ghcr.io/bronifty/busy-knuth:latest
+```
+
+Push the image to GHCR:
+
+```sh
+docker push ghcr.io/bronifty/busy-knuth:latest
+```
+
+## Update Deployment With GHCRIO Image
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: busy-knuth-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: busy-knuth
+  template:
+    metadata:
+      labels:
+        app: busy-knuth
+    spec:
+      containers:
+        - name: busy-knuth-container
+          image: ghcr.io/bronifty/busy-knuth:latest
+          imagePullPolicy: Always
+          command: ["/bin/sh"]
+          args:
+            - "-c"
+            - |
+              echo Container started
+              trap "exit 0" 15
+
+              exec "$@"
+              while sleep 1 & wait $!; do :; done
+            - "-"
+          env:
+            - name: PATH
+              value: "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+            - name: DEBIAN_FRONTEND
+              value: "noninteractive"
+          volumeMounts:
+            - name: c-debugging
+              mountPath: /workspaces/c-debugging
+            - name: vscode
+              mountPath: /vscode
+      volumes:
+        - name: c-debugging
+          hostPath:
+            path: /Users/bronifty/codes/temp/c-debugging
+            type: Directory
+        - name: vscode
+          persistentVolumeClaim:
+            claimName: vscode-pvc
+```
+
+## Run Locally
+
+```sh
+   docker run -it ghcr.io/bronifty/busy-knuth:latest
+```
+
+## Apply Deployment Update
+
+```sh
+kubectl apply -f deployment.yaml
+kubectl get pods
+kubectl describe pod busy-knuth-deployment-xxxxxxxxxx-yyyyy
+kubectl exec -it busy-knuth-deployment-xxxxxxxxxx-yyyyy -- /bin/bash
+kubectl logs busy-knuth-deployment-xxxxxxxxxx-yyyyy
+```
+
+## Verify and Check Logs
+
+```sh
+kubectl get pods
+kubectl describe pod busy-knuth-deployment-xxxxxxxxxx-yyyyy
+kubectl exec -it busy-knuth-deployment-xxxxxxxxxx-yyyyy -- /bin/bash
+kubectl logs busy-knuth-deployment-xxxxxxxxxx-yyyyy
+```
+
+## Kustomize
+
+```sh
+CURRENT_DIR=$(pwd)
+sed "s|/absolute/path/to/desired/directory|$CURRENT_DIR|g" overlays/dev/volume-patch.yaml > overlays/dev/volume-patch-temp.yaml
+
+kustomize build overlays/dev | kubectl apply -f -
+```
+
+## Validate
+
+```sh
+kubectl get pods
+kubectl describe pod busy-knuth-deployment-xxxxxxxxxx-yyyyy
+kubectl exec -it busy-knuth-deployment-xxxxxxxxxx-yyyyy -- /bin/bash
+kubectl logs busy-knuth-deployment-xxxxxxxxxx-yyyyy
 ```
