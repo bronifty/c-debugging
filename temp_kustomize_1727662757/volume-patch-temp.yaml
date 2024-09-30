@@ -8,5 +8,5 @@ spec:
       volumes:
         - name: c-debugging
           hostPath:
-            path: /absolute/path/to/desired/directory
+            path: /Users/bronifty/codes/temp/c-debugging
             type: Directory
