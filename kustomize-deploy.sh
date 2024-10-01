@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Create the PVC
+kubectl apply -f pvc.yaml
+
 # Build the docker image
 docker build -t ubuntu22-debug-c .
 
@@ -22,6 +25,8 @@ sed -i '' 's/volume-patch.yaml/volume-patch-temp.yaml/' $TEMP_DIR/kustomization.
 # Print the contents of the modified kustomization file
 echo "Contents of modified kustomization.yaml:"
 cat $TEMP_DIR/kustomization.yaml
+
+
 
 # Build and apply the kustomization using the temporary directory with verbose output
 kustomize build $TEMP_DIR | kubectl apply -f -

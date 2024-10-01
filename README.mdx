@@ -135,35 +135,32 @@ chmod +x ./kustomize-deploy.sh
 ./kustomize-deploy.sh
 ```
 
-- hard way:
+## Manual Steps
+
+- build the container image from the local Dockerfile
 
 ```sh
-   docker tag vsc-c-debugging-5cb14d97b6647bd269ce259609f58817373ef5391aca3ec3e9aa7ef80b9aad99 busy-knuth:latest
+   docker build -t <image-name>:<tag> .
 ```
 
-```sh
-kubectl apply -f pvc.yaml
-kubectl apply -f deployment.yaml
-kubectl get pods
-kubectl exec -it busy-knuth -- /bin/sh
-```
+- push the image to the GHCR
 
 ```sh
-kubectl apply -f deployment.yaml
-kubectl get pods
-kubectl describe pod busy-knuth-deployment-xxxxxxxxxx-yyyyy
-kubectl exec -it busy-knuth-deployment-xxxxxxxxxx-yyyyy -- /bin/bash
+docker tag <image-name>:<tag> ghcr.io/<username>/<image-name>:<tag>
+docker push ghcr.io/<username>/<image-name>:<tag>
 ```
 
+## Kubectl Commands
+
 ```sh
+kubectl apply -f <filename>.yaml
+kubectl exec -it <pod-name> -- /bin/sh
+kubectl describe pod <pod-name>
 kubectl get deployments
-kubectl scale deployment busy-knuth-deployment --replicas=0
+kubectl scale deployment <deployment-name> --replicas=0
 kubectl get pods
-kubectl scale deployment busy-knuth-deployment --replicas=1
-kubectl get pods
-kubectl delete pod busy-knuth-deployment-69ffb84b69-lvbm4
-kubectl delete deployment busy-knuth-deployment
-kubectl get deployments
+kubectl delete pod <pod-name>
+kubectl delete deployment <deployment-name>
 kubectl delete pods --all
 ```
 
