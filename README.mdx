@@ -128,29 +128,16 @@ CMD ["bash"]
 
 ## Kubernetes
 
-- easy way:
+### Kustomize
 
 ```sh
 chmod +x ./kustomize-deploy.sh
 ./kustomize-deploy.sh
 ```
 
-## Manual Steps
+## Kubectl
 
-- build the container image from the local Dockerfile
-
-```sh
-   docker build -t <image-name>:<tag> .
-```
-
-- push the image to the GHCR
-
-```sh
-docker tag <image-name>:<tag> ghcr.io/<username>/<image-name>:<tag>
-docker push ghcr.io/<username>/<image-name>:<tag>
-```
-
-## Kubectl Commands
+### Commands Reference
 
 ```sh
 kubectl apply -f <filename>.yaml
@@ -164,7 +151,7 @@ kubectl delete deployment <deployment-name>
 kubectl delete pods --all
 ```
 
-## GHCRIO Registry
+### Sourcing images from Github (GHCRIO Registry)
 
 Generate a Personal Access Token (PAT):
 Navigate to GitHub Settings.
@@ -182,29 +169,24 @@ Login to GHCR via Docker CLI:
 Open your terminal and execute:
 
 ```sh
-   echo <YOUR_PAT> | docker login ghcr.io -u bronifty --password-stdin
+echo <YOUR_PAT> | docker login ghcr.io -u <github-username> --password-stdin
 
 ```
 
-## Build Image
+### Build Image from Dockerfile
 
 ```sh
-   docker build -t busy-knuth:latest .
+docker build -t <image-name>:<tag> .
 ```
 
-Tag the image:
+### Tag and Push Image to GHCRIO Registry
 
 ```sh
-docker tag busy-knuth:latest ghcr.io/bronifty/busy-knuth:latest
+docker tag <image-name>:<tag> ghcr.io/<username>/<image-name>:<tag>
+docker push ghcr.io/<username>/<image-name>:<tag>
 ```
 
-Push the image to GHCR:
-
-```sh
-docker push ghcr.io/bronifty/busy-knuth:latest
-```
-
-## Update Deployment With GHCRIO Image
+### Reference the ghcr.io registry in the kubernetes deployment manifest
 
 ```yaml
 apiVersion: apps/v1
@@ -224,7 +206,7 @@ spec:
       containers:
         - name: busy-knuth-container
           image: ghcr.io/bronifty/busy-knuth:latest
-          imagePullPolicy: Always
+          imagePullPolicy: IfNotPresent
           command: ["/bin/sh"]
           args:
             - "-c"
@@ -255,10 +237,10 @@ spec:
             claimName: vscode-pvc
 ```
 
-## Run Locally
+### Run GHCRIO Image Locally to Validate
 
 ```sh
-   docker run -it ghcr.io/bronifty/busy-knuth:latest
+docker run -it ghcr.io/<username>/<image-name>:<tag>
 ```
 
 ## Apply Deployment Update
@@ -272,24 +254,6 @@ kubectl logs busy-knuth-deployment-xxxxxxxxxx-yyyyy
 ```
 
 ## Verify and Check Logs
-
-```sh
-kubectl get pods
-kubectl describe pod busy-knuth-deployment-xxxxxxxxxx-yyyyy
-kubectl exec -it busy-knuth-deployment-xxxxxxxxxx-yyyyy -- /bin/bash
-kubectl logs busy-knuth-deployment-xxxxxxxxxx-yyyyy
-```
-
-## Kustomize
-
-```sh
-CURRENT_DIR=$(pwd)
-sed "s|/absolute/path/to/desired/directory|$CURRENT_DIR|g" overlays/dev/volume-patch.yaml > overlays/dev/volume-patch-temp.yaml
-
-kustomize build overlays/dev | kubectl apply -f -
-```
-
-## Validate
 
 ```sh
 kubectl get pods
