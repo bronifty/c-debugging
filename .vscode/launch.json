@@ -10,6 +10,14 @@
       "preLaunchTask": "clang++"
     },
     {
+      "name": "make",
+      "type": "lldb",
+      "request": "launch",
+      "program": "${fileDirname}/${fileBasenameNoExtension}",
+      "cwd": "${workspaceFolder}",
+      "preLaunchTask": "make"
+    },
+    {
       "name": "python",
       "type": "python",
       "request": "launch",

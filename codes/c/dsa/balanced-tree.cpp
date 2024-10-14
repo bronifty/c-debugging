@@ -119,14 +119,32 @@ void free_bst(node *root) {
 
 int main(int argc, char *argv[]) {
     if (argc < 2) {
-        printf("Usage: %s <numbers...>\n", argv[0]);
-        printf("Example: %s 5 3 1 4 2\n", argv[0]);
-        return EXIT_FAILURE;
+        int predefined_numbers[] = {54, 1, 22, 9, 7, 6, 88, 44, 22, 30, 1, 3, 5, 7, 9, 6, 2, 4};
+        int num_elements = sizeof(predefined_numbers) / sizeof(predefined_numbers[0]);
+
+        argc = num_elements + 1;  // +1 for the program name
+        char **new_argv = (char **) malloc(argc * sizeof(char*));
+        if (new_argv == NULL) {
+            perror("Failed to allocate memory for new argv");
+            return EXIT_FAILURE;
+        }
+
+        new_argv[0] = argv[0];  // Program name
+        for (int i = 0; i < num_elements; i++) {
+            char *num_str = (char *) malloc(12 * sizeof(char));  // Enough for any 32-bit integer
+            if (num_str == NULL) {
+                perror("Failed to allocate memory for number string");
+                return EXIT_FAILURE;
+            }
+            snprintf(num_str, 12, "%d", predefined_numbers[i]);
+            new_argv[i + 1] = num_str;
+        }
+
+        argv = new_argv;
     }
 
     node *bst_root = NULL; // Root of the BST
 
-    // Parse command-line arguments and insert into BST
     for (int i = 1; i < argc; i++) {
         char *endptr;
         errno = 0; // To distinguish success/failure after the call
@@ -178,4 +196,3 @@ int main(int argc, char *argv[]) {
  *  Number 4 is found in the tree.
  **/
 
-main("54 1 22 9 7 6 88 44 22 30 1 3 5 7 9 6 2 4");

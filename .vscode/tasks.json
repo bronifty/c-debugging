@@ -12,6 +12,13 @@
         "-o",
         "${fileDirname}/${fileBasenameNoExtension}"
       ]
+    },
+    {
+      "label": "make",
+      "type": "shell",
+      "command": "make",
+      "args": [],
+      "problemMatcher": []
     }
   ]
 }
