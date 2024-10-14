@@ -137,7 +137,16 @@ int main(int argc, char *argv[]) {
                 perror("Failed to allocate memory for number string");
                 return EXIT_FAILURE;
             }
+            /* 
+             * makes the i+1th element of new_argv point to the 
+             * memory location where the string representation of a number is stored.
+             */
             snprintf(num_str, 12, "%d", predefined_numbers[i]);
+            /* 
+             * after new_argv[i + 1] = num_str; , 
+             * the i-th + 1 element of new_argv is supplied with 
+             * the ith element of the loop converted to a string
+             */
             new_argv[i + 1] = num_str;
         }
 
