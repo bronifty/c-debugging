@@ -1,3 +1,4 @@
+// balanced-tree.c
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -181,11 +182,18 @@ int main(int argc, char *argv[]) {
     // Free allocated memory
     free_bst(bst_root);
 
+    if (argc > 1) {
+        for (int i = 1; i < argc; i++) {
+            free(argv[i]);
+        }
+        free(argv);
+    }
+
     return EXIT_SUCCESS;
 }
 
 /**
- *  /usr/bin/clang++ -std=c++17 -g ./balanced-tree.c -o ./balanced-tree
+ *  /usr/bin/clang -std=c17 -g ./balanced-tree.c -o ./balanced-tree
  *  ./balanced-tree 54 1 22 97 6 88 44 22 30 1 3 5 7 9 6 2
  *  In-order traversal of the BST:
  *  1 1 2 3 5 6 6 7 9 22 30 44 54 88 97 
@@ -195,4 +203,3 @@ int main(int argc, char *argv[]) {
  *  1 2 3 4 5 6 7 9 22 30 44 54 88 
  *  Number 4 is found in the tree.
  **/
-
