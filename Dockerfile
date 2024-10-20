@@ -29,4 +29,26 @@ ENV PATH=$PATH:/usr/local/go/bin:$GOPATH/bin
 
 RUN go version
 
-CMD ["bash"]
+RUN apt-get update && apt-get install -y \
+    iproute2
+
+# Update the package list and install necessary packages
+RUN apt-get update && \
+    apt-get install -y bash openssh-server sudo && \
+    mkdir /var/run/sshd && \
+    echo 'root:your_password_here' | chpasswd && \
+    sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config && \
+    sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/' /etc/ssh/sshd_config && \
+    rm -rf /var/lib/apt/lists/*
+
+# Allow root to use sudo without a password (Optional: For convenience)
+RUN echo 'root ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
+
+RUN sed -i 's/PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config
+
+# Expose SSH port
+EXPOSE 22
+
+WORKDIR /workspaces/c-debugging
+# Start SSH server and keep the container running
+CMD ["/usr/sbin/sshd", "-D"]
