@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   ubuntu22-debug-c:
     build:
@@ -7,7 +5,7 @@ services:
       dockerfile: Dockerfile
     image: ubuntu22-debug-c:latest
     container_name: ubuntu22-debug-c
-    network_mode: host
+    # network_mode: host
     stdin_open: true # Keeps STDIN open even if not attached
     tty: true # Allocates a pseudo-TTY
     # Optional: Mount volumes or set environment variables as needed
