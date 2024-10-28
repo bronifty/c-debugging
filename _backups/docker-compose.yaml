@@ -3,6 +3,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    image: ubuntu22-debug-c:latest
     container_name: ubuntu22-debug-c
     # network_mode: host
     stdin_open: true # Keeps STDIN open even if not attached
@@ -13,4 +14,4 @@ services:
     # environment:
     #   - ENV_VAR=value
     # No need to expose ports explicitly with host networking
-    # command: /usr/sbin/sshd -D # Starts the SSH daemon
+    command: /usr/sbin/sshd -D # Starts the SSH daemon

@@ -40,3 +40,22 @@ RUN curl -fsSL https://tailscale.com/install.sh | sh
 RUN tailscaled --tun=userspace-networking --socks5-server=localhost:1055 &
 
 
+# Install Python dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy the Lambda function code
+COPY lambda_function.py .
+
+# Copy the entrypoint script
+COPY entrypoint.sh .
+RUN chmod +x entrypoint.sh
+
+# Expose necessary ports if needed (e.g., Tailscale SOCKS5 proxy)
+EXPOSE 1055
+
+# Set the entrypoint to initialize Tailscale and start Lambda runtime
+ENTRYPOINT ["/entrypoint.sh"]
+
+# Specify the Lambda handler
+CMD ["lambda_function.handler"]

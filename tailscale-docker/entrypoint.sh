@@ -22,10 +22,14 @@ sleep 5
 
 # Authenticate and connect Tailscale
 echo "Authenticating Tailscale..."
-tailscale up --authkey=${TAILSCALE_AUTHKEY} --hostname=${TAILSCALE_HOSTNAME:-lambda-container}
+tailscale up --authkey=${TAILSCALE_OAUTH_SECRET} --hostname=${TAILSCALE_HOSTNAME:-tailscale-container}
 
 echo "Tailscale started successfully."
 
-# Start the Lambda runtime in the foreground
-echo "Starting Lambda Runtime..."
-exec /var/runtime/bootstrap "$@"
+# Start your main service (e.g., a web server)
+# Here, we're starting a simple Python HTTP server on port 8000
+echo "Starting web server..."
+python3 -m http.server 8000 &
+
+# Wait indefinitely to keep the container running
+wait

@@ -5,3 +5,13 @@ mkdir -p /tmp/tailscale
 /var/runtime/tailscale up --authkey=${TAILSCALE_AUTHKEY} --hostname=aws-lambda-app
 echo Tailscale started
 ALL_PROXY=socks5://localhost:1055/ /var/runtime/my-app
+
+
+
+/var/runtime/python3.9 /var/runtime/lambda_function.py
+
+echo "Starting web server..."
+python3 -m http.server 8000 &
+
+# Wait indefinitely to keep the container running
+wait

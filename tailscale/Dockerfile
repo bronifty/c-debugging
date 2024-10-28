@@ -1,63 +1,39 @@
-# Stage 1: Build Stage
-FROM public.ecr.aws/lambda/nodejs:20 AS builder
-WORKDIR /app
+# Use AWS Lambda Python 3.9 base image
+FROM public.ecr.aws/lambda/python:3.9
 
-# Copy application files
-COPY . ./
+# Set environment variables to non-interactive to avoid prompts during installation
+ENV DEBIAN_FRONTEND=noninteractive
 
-# Install dependencies if any (uncomment if needed)
-# RUN npm install
+# Update package lists and install necessary packages
+RUN apt-get update && apt-get install -y \
+    curl \
+    gnupg \
+    lsb-release \
+    && rm -rf /var/lib/apt/lists/*
 
-# Stage 2: Production Image
-FROM public.ecr.aws/lambda/nodejs:20
+# Install Tailscale
+RUN curl -fsSL https://pkgs.tailscale.com/stable/ubuntu/jammy.gpg | apt-key add - && \
+    curl -fsSL https://pkgs.tailscale.com/stable/ubuntu/jammy.list | tee /etc/apt/sources.list.d/tailscale.list && \
+    apt-get update && \
+    apt-get install -y tailscale && \
+    rm -rf /var/lib/apt/lists/*
 
-# Set working directory
-WORKDIR /var/task
+# Install Python dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy Node.js Lambda function from builder
-COPY --from=builder /app/index.js .
+# Copy the Lambda function code
+COPY lambda_function.py .
 
-# Copy Tailscale binaries from the tailscale image on Docker Hub
-COPY --from=docker.io/tailscale/tailscale:stable /usr/local/bin/tailscaled /var/runtime/tailscaled
-COPY --from=docker.io/tailscale/tailscale:stable /usr/local/bin/tailscale /var/runtime/tailscale
+# Copy the entrypoint script
+COPY entrypoint.sh .
+RUN chmod +x entrypoint.sh
 
-# Ensure Tailscale binaries are executable
-RUN chmod +x /var/runtime/tailscaled /var/runtime/tailscale
+# Expose necessary ports if needed (e.g., Tailscale SOCKS5 proxy)
+EXPOSE 1055
 
-# Create necessary symlinks to redirect Tailscale directories to /tmp/tailscale
-RUN mkdir -p /var/run && ln -s /tmp/tailscale /var/run/tailscale && \
-    mkdir -p /var/cache && ln -s /tmp/tailscale /var/cache/tailscale && \
-    mkdir -p /var/lib && ln -s /tmp/tailscale /var/lib/tailscale && \
-    mkdir -p /var/task && ln -s /tmp/tailscale /var/task/tailscale
-
-# Copy custom entrypoint script
-COPY entrypoint.sh /app/entrypoint.sh
-
-# Make sure the entrypoint script is executable
-RUN chmod +x /app/entrypoint.sh
-
-# Set the custom entrypoint
-ENTRYPOINT ["/app/entrypoint.sh"]
+# Set the entrypoint to initialize Tailscale and start Lambda runtime
+ENTRYPOINT ["/entrypoint.sh"]
 
 # Specify the Lambda handler
-CMD [ "index.handler" ]
-
-# FROM public.ecr.aws/lambda/provided:al2 as builder
-# WORKDIR /app
-# COPY . ./
-# # This is where one could build the application code as well.
-
-# FROM public.ecr.aws/lambda/provided:al2
-# # Copy binary to production image.
-# COPY --from=builder /app/bootstrap /var/runtime/bootstrap
-
-# # Copy Tailscale binaries from the tailscale image on Docker Hub.
-# COPY --from=docker.io/tailscale/tailscale:stable /usr/local/bin/tailscaled /var/runtime/tailscaled
-# COPY --from=docker.io/tailscale/tailscale:stable /usr/local/bin/tailscale /var/runtime/tailscale
-# RUN mkdir -p /var/run && ln -s /tmp/tailscale /var/run/tailscale && \
-#     mkdir -p /var/cache && ln -s /tmp/tailscale /var/cache/tailscale && \
-#     mkdir -p /var/lib && ln -s /tmp/tailscale /var/lib/tailscale && \
-#     mkdir -p /var/task && ln -s /tmp/tailscale /var/task/tailscale
-
-# # Run on container startup.
-# ENTRYPOINT ["/var/runtime/bootstrap"]
+CMD ["lambda_function.handler"]

@@ -1,0 +1,25 @@
+version: "3.8"
+
+services:
+  tailscale:
+    build: .
+    container_name: debug-c-container
+    hostname: debug-c
+    env_file:
+      - .env
+    environment:
+      - TAILSCALE_AUTHKEY=${TAILSCALE_OAUTH_SECRET}
+      - "TS_EXTRA_ARGS=--advertise-tags=tag:container --reset"
+      - TS_STATE_DIR=/var/lib/tailscale
+    volumes:
+      - tailscale-volume:/var/lib/tailscale
+    cap_add:
+      - net_admin
+      - sys_module
+    ports:
+      - "8000:8000"
+      - "1055:1055"
+    restart: unless-stopped
+volumes:
+  tailscale-volume:
+    driver: local

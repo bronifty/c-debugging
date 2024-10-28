@@ -22,7 +22,8 @@ sleep 5
 
 # Authenticate and connect Tailscale
 echo "Authenticating Tailscale..."
-tailscale up --authkey=${TAILSCALE_AUTHKEY} --hostname=${TAILSCALE_HOSTNAME:-lambda-container}
+
+tailscale login --authkey=${TAILSCALE_AUTHKEY} --hostname=${TAILSCALE_HOSTNAME:-lambda-container} --ssh --reset
 
 echo "Tailscale started successfully."
 
