@@ -1,21 +1,38 @@
 #!/bin/bash
-
-echo "TS_AUTHKEY: $TS_AUTHKEY"
-
 set -e
 
-# Function to start Tailscale
-start_tailscale() {
-    echo "Starting Tailscale..."
-    tailscale up --auth-key="$TS_AUTHKEY" --ssh --reset
-}
+echo "--authkey=\"${TS_AUTHKEY}\""
 
-# Function to keep the container running
-keep_alive() {
-    echo "Tailscale started. Keeping the container alive..."
-    tail -f /dev/null
-}
+echo "Entrypoint script started."
 
-# Start Tailscale and keep the container running
-start_tailscale
-keep_alive
+# Redirect logs to stdout for Docker logging
+exec > >(tee -i /var/log/entrypoint.log)
+exec 2>&1
+
+# Start tailscaled daemon
+echo "Starting tailscaled..."
+tailscaled --state=/var/lib/tailscale/tailscaled.state --tun=userspace-networking --socks5-server=localhost:1055 &
+TAILSCALED_PID=$!
+
+# Wait for tailscaled to initialize
+echo "Waiting for tailscaled to initialize..."
+sleep 5
+
+# Check if tailscaled is running
+if ! pgrep tailscaled > /dev/null; then
+    echo "Error: tailscaled failed to start."
+    exit 1
+fi
+echo "tailscaled is running with PID $TAILSCALED_PID."
+
+# Authenticate and bring up Tailscale
+echo "Bringing up Tailscale..."
+tailscale up --authkey="${TS_AUTHKEY}" --ssh --reset
+
+# Verify Tailscale status
+echo "Verifying Tailscale status..."
+tailscale status
+
+# Keep the container running
+echo "Tailscale up completed successfully. Keeping the container alive..."
+wait $TAILSCALED_PID
