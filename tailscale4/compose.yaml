@@ -1,0 +1,41 @@
+services:
+  tailscale:
+    image: tailscale/tailscale:latest
+    container_name: tailscale-container
+    hostname: ubuntu-tailscale
+    env_file:
+      - .env
+    environment:
+      - TS_AUTHKEY=${TAILSCALE_AUTH_KEY}
+      - TS_STATE_DIR=/var/lib/tailscale
+      - TS_USERSPACE=false
+    volumes:
+      - tailscale-volume:/var/lib/tailscale
+      - /dev/net/tun:/dev/net/tun
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    restart: unless-stopped
+
+  ubuntu:
+    build: .
+    container_name: ubuntu-container
+    depends_on:
+      - tailscale
+    network_mode: service:tailscale
+    environment:
+      - TS_AUTHKEY=${TAILSCALE_AUTH_KEY}
+      - TS_STATE_DIR=/var/lib/tailscale
+    volumes:
+      - ubuntu-tailscale-volume:/var/lib/tailscale
+      - /dev/net/tun:/dev/net/tun
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    restart: unless-stopped
+
+volumes:
+  tailscale-volume:
+    driver: local
+  ubuntu-tailscale-volume:
+    driver: local
