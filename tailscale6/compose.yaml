@@ -1,0 +1,22 @@
+services:
+  ubuntu-with-tailscale:
+    build: .
+    container_name: ubuntu-with-tailscale-container
+    hostname: ubuntu-tailscale
+    env_file:
+      - .env
+    environment:
+      - TS_AUTHKEY=${TAILSCALE_AUTH_KEY}
+    volumes:
+      - ubuntu-tailscale-volume:/var/lib/tailscale
+      - /dev/net/tun:/dev/net/tun
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    devices:
+      - /dev/net/tun
+    restart: unless-stopped
+
+volumes:
+  ubuntu-tailscale-volume:
+    driver: local
