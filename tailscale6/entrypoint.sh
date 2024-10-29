@@ -27,7 +27,8 @@ echo "tailscaled is running with PID $TAILSCALED_PID."
 
 # Authenticate and bring up Tailscale
 echo "Bringing up Tailscale..."
-tailscale up --authkey="${TS_AUTHKEY}" --ssh --reset
+# tailscale up --authkey="${TS_AUTHKEY}" --ssh --reset
+tailscale up --authkey="${TS_AUTHKEY}" --ssh --advertise-tags=tag:container --reset
 
 # Verify Tailscale status
 echo "Verifying Tailscale status..."

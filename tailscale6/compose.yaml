@@ -6,15 +6,17 @@ services:
     env_file:
       - .env
     environment:
-      - TS_AUTHKEY=${TAILSCALE_AUTH_KEY}
+      - TS_AUTHKEY=${TS_AUTHKEY}
+      - "TS_EXTRA_ARGS=--advertise-tags=tag:container --reset"
     volumes:
       - ubuntu-tailscale-volume:/var/lib/tailscale
       - /dev/net/tun:/dev/net/tun
-    cap_add:
-      - NET_ADMIN
-      - SYS_MODULE
-    devices:
-      - /dev/net/tun
+    privileged: true
+    # cap_add:
+    #   - NET_ADMIN
+    #   - SYS_MODULE
+    # devices:
+    #   - /dev/net/tun
     restart: unless-stopped
 
 volumes:
