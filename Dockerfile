@@ -36,3 +36,4 @@ RUN curl -LO https://golang.org/dl/go$GO_VERSION.linux-amd64.tar.gz \
 ENV GOPATH=/go
 ENV PATH=$PATH:/usr/local/go/bin:$GOPATH/bin
 RUN go version
+# export PATH=$PATH:/usr/local/go/bin:/go/bin
