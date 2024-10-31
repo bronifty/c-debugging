@@ -7,6 +7,11 @@ Hit ctrl + shift + p and select `Reopen in Container`. The .devcontainer config 
 ## Tailscale Dev
 
 This requires an oauth key passed into the .env file (rename sample.env to .env and fill in the key).
+
+```bash
+docker compose up
+```
+
 You can access the container on the tailnet.
 Currently, it won't work locally unless the entrypoint is commented out.
 
