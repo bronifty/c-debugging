@@ -1,5 +1,15 @@
 # LLDB Debugger Config for VS Code and Cursor Running in Tailscale Container
 
+## Local Dev
+
+Hit ctrl + shift + p and select `Reopen in Container`. The .devcontainer config will refer to the Dockerfile.local, which is a copy of the Dockerfile but with the entrypoint commented out.
+
+## Tailscale Dev
+
+This requires an oauth key passed into the .env file (rename sample.env to .env and fill in the key).
+You can access the container on the tailnet.
+Currently, it won't work locally unless the entrypoint is commented out.
+
 :::info
 This will work for c and c++. You will need 2 ide extensions, one local (on your machine) and one remote (in the container).
 :::
