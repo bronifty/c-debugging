@@ -158,3 +158,14 @@ dockerstop() {
     docker volume rm $(docker volume ls -q)
 }
 ```
+
+```bash
+# get the shell type to get the correct shell config
+echo $SHELL
+
+# assuming bash and bashrc is the shell and config file
+# add go to path
+cat << 'EOF' >> ~/.bashrc
+export PATH=$PATH:/usr/local/go/bin:/go/bin
+EOF
+```
