@@ -15,6 +15,12 @@ docker compose up
 You can access the container on the tailnet.
 Currently, it won't work locally unless the entrypoint is commented out.
 
+## Language Support
+
+- c/c++ (you will need the lldb extension to debug; notes below)
+- python (python3 and pip3 are installed)
+- go (you may have to get into the ~/.bashrc file and insert the line `export PATH="$PATH:/usr/local/go/bin:/go/bin"`)
+
 :::info
 This will work for c and c++. You will need 2 ide extensions, one local (on your machine) and one remote (in the container).
 :::

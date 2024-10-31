@@ -25,9 +25,14 @@ COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 
+# # setup python
+# RUN pip3 install --upgrade pip
+# RUN update-alternatives --install /usr/bin/python python /usr/bin/python3 10
 # setup python
 RUN pip3 install --upgrade pip
+RUN update-alternatives --install /usr/bin/pip pip /usr/bin/pip3 10
 RUN update-alternatives --install /usr/bin/python python /usr/bin/python3 10
+
 
 # setup golang
 RUN curl -LO https://golang.org/dl/go$GO_VERSION.linux-amd64.tar.gz \
