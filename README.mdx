@@ -12,6 +12,8 @@ This requires an oauth key passed into the .env file (rename sample.env to .env 
 docker compose up
 ```
 
+- The bind mount (map to local file system of this repo) is in /workspaces/c-debugging inside the container you may need to switch to that directory once inside.
+
 You can access the container on the tailnet.
 Currently, it won't work locally unless the entrypoint is commented out.
 
