@@ -1,0 +1,51 @@
+# Tailscale Container
+
+We are starting from the following repo, but it has some errors, so making updates and tracking changes here.
+
+- [tailscale-dev/docker-guide-code-examples](https://github.com/tailscale-dev/docker-guide-code-examples)
+- (accompanying video tutorial)(https://www.youtube.com/embed/tqvvZhGrciQ?si=iyzXGuWZq0FMA_NY)
+- <iframe
+    width="560"
+    height="315"
+    src="https://www.youtube.com/embed/tqvvZhGrciQ?si=iyzXGuWZq0FMA_NY"
+    title="YouTube video player"
+    frameborder="0"
+    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+    referrerpolicy="strict-origin-when-cross-origin"
+    allowfullscreen></iframe>
+
+## Deep Dive Notes
+
+- run an arbitrary command inside of the nginx container's namespace with nsenter
+- we can run this for each container to see what's going on inside of them
+
+```bash
+nsenter -t $(docker inspect -f '{{.State.Pid}}' nginx-container) -n netstat -tunalp
+```
+
+- alternatively, we can use docker's network tools to inspect
+- docker creates a separate network for each "stack" (set of services in a docker compose file)
+
+```bash
+docker network ls
+docker network inspect 01-nginx-basic_default | jq '.[0].Containers'
+```
+
+- dockerstop()
+- can go in your .bashrc or .zshrc
+
+```bash
+
+dockerstop() {
+    docker stop $(docker ps -aq)
+    docker rm $(docker ps -aq)
+    docker volume rm $(docker volume ls -q)
+}
+```
+
+- exec into a running container
+
+```bash
+docker exec -it tailscale-container /bin/sh
+/ # tailscale serve status -json
+```

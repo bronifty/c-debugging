@@ -1,0 +1,5 @@
+# Tailscale Nginx Basic
+
+The nginx container is running on the network interface of the tailscale container, sharing its IP and DNS names.
+
+The tailscale container is a sidecar proxy, which gives its powers to the nginx container, sort of like a composition in object oriented programming. The nginx has-a tailscale. Thus, the nginx shows up in the list of machines accessible from your tailscale web console.
