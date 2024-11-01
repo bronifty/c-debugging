@@ -187,6 +187,76 @@ Syntax: pointers need * to access value, references don't
 Reassignment: pointers can point to different things, references can't
 Nullability: pointers can be null, references must refer to something
 
+5. Q: explain the meaning of "&operator=" in the move assignment operator syntax. does & refer to a memory address?
+5. A: In Person &operator=, the & is indicating that this function returns a reference to a Person, not a memory address. Let's break it down:
+```cpp 
+Person &operator=(Person &&other)
+//     ^
+//     returns a reference to Person (not a copy)
+```
+This syntax means:
+operator= is the function name (overloading the = operator)
+Person & means it returns a reference to the current Person object
+This enables chaining of assignments:
+```cpp 
+Person a, b, c;
+a = b = c;  // Possible because = returns reference
+// equivalent to:
+// b.operator=(c)   returns reference to b
+// a.operator=(b)   returns reference to a
+```
+Without the & (returning by reference):
+```cpp
+Person operator=(Person &&other)  // Returns by value (copy)
+```
+This would:
+Create a copy of the object
+Be less efficient
+Not allow chaining
+The & here is different from pointer syntax:
+& in return type = "return a reference"
+& with variable = "get address of"
+& in parameter = "lvalue reference"
+&& in parameter = "rvalue reference"
+
+6. Q: help me with this chaining logic. you said a.operator=(b) returns a reference to a? i thought a would be assigned to the value of the reference b?
+6 A: Let me clarify the chaining with a = b = c:
+```cpp 
+// This expression:
+a = b = c;
+
+// Is evaluated right to left:
+1. b = c        // First, b.operator=(c) happens
+                // - Moves c's contents to b
+                // - Returns reference to b
+
+2. a = (b)      // Then a.operator=(b) happens
+                // - Moves b's contents to a
+                // - Returns reference to a
+```
+Let's see it with the actual move assignment operator:
+```cpp 
+Person& operator=(Person&& other) {  // Takes rvalue reference
+    // Move other's contents to this object
+    age_ = other.age_;
+    nicknames_ = std::move(other.nicknames_);
+    valid_ = true;
+    other.valid_ = false;
+
+    return *this;   // Returns reference to current object
+}
+```
+So when you do a = b = c:
+b = c:
+Moves c's contents into b
+Returns reference to b (now containing c's data)
+a = b:
+Moves b's contents (originally from c) into a
+Returns reference to a
+You're right that values are being moved, but the operator returns a reference to allow chaining. The reference isn't what's being assigned - it's just what's being returned to enable the next assignment.
+
+
+
 
 
 ---
