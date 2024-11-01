@@ -287,6 +287,34 @@ When returning a reference (Person&), we need the object itself (*this)
 & of a pointer gives us a pointer-to-pointer, which isn't what we want
 *this dereferences the pointer to get the actual object we can reference
 
+8. Q: add pointer syntax to complete this list: & in return type = "return a reference"
+& with variable = "get address of"
+& in parameter = "lvalue reference"
+&& in parameter = "rvalue reference"
+A: Here's the complete list of & and * syntax in C++:
+```cpp 
+// & Syntax:
+& in return type    = "return a reference"          // Person&
+& with variable    = "get address of"              // &myVar
+& in parameter     = "lvalue reference"            // void foo(Person& p)
+&& in parameter    = "rvalue reference"            // void foo(Person&& p)
+
+// * Syntax:
+* in declaration   = "declare a pointer"           // Person* ptr
+* with variable    = "dereference pointer"         // *ptr
+* in return type   = "return a pointer"            // Person* foo()
+
+// Combined examples:
+Person* ptr = &person;     // * declares pointer, & gets address
+Person& ref = *ptr;        // & declares reference, * dereferences
+*ptr = std::move(person);  // * dereferences, then assigns
+```
+Think of:
+& as either "reference" or "address of"
+* as either "pointer" or "value at address"
+The meaning depends on where it appears in the code (declaration vs usage).
+
+
 
 
 ---
