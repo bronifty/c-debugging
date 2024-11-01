@@ -39,3 +39,36 @@ ptr     // gives Address2 (location of the int)
 *ptr    // gives 5 (value at Address2)
 ```
 
+## Move Assignment Operator
+
+```cpp 
+Person &operator=(Person &&other)
+//  ^                    ^
+//  returns lvalue ref   takes rvalue ref parameter
+{
+    // ... operations ...
+    return *this;  // *this is an lvalue
+}
+```
+
+About *this:
+this is a pointer to the current object
+*this is a dereferenced pointer that gives us the actual object
+*this is an lvalue because it refers to the persistent object in memory
+We return a reference to this lvalue (Person&)
+The return value:
+
+```cpp 
+Person &operator=  // Returns lvalue reference
+return *this;      // Returns reference to lvalue object
+```
+
+```cpp
+// Example:
+Person a, b;
+a = std::move(b);  // b is converted to rvalue                   
+// operation returns reference to a (lvalue)
+```
+
+The reason *this must be an lvalue is because it refers to the persistent object that continues to exist after the operation. It's not temporary data (rvalue) - it's the actual object in memory that we want to keep using.
+
