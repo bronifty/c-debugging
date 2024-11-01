@@ -291,7 +291,7 @@ When returning a reference (Person&), we need the object itself (*this)
 & with variable = "get address of"
 & in parameter = "lvalue reference"
 && in parameter = "rvalue reference"
-A: Here's the complete list of & and * syntax in C++:
+8. A: Here's the complete list of & and * syntax in C++:
 ```cpp 
 // & Syntax:
 & in return type    = "return a reference"          // Person&
@@ -314,8 +314,32 @@ Think of:
 * as either "pointer" or "value at address"
 The meaning depends on where it appears in the code (declaration vs usage).
 
+9. Q: is it accurate to say * is a pointer to a memory address or its value and & is the memory address?
+9. A: Yes, that's a good way to think about it! Let me illustrate:
+```cpp 
+int x = 42;        // Regular variable
 
+int* ptr = &x;     // ptr stores memory address of x
+                   // * = pointer that can hold an address
+                   // & = get the address
 
+// Using them:
+*ptr               // Follow pointer to get value (42)
+&x                 // Get address of x (e.g., 0x123)
+
+// Visualized:
+x:    [42]        // at address 0x123
+ptr:  [0x123]     // points to x's address
+*ptr: [42]        // value at address ptr points to
+&x:   0x123       // address of x
+```
+So:
+* means "follow this address to its value" or "pointer type"
+& means "get the address of" or "reference type"
+Think of:
+* as "what's at this address?"
+& as "what's the address?"
+The only exception is when they're used in type declarations (like int& for references), but for general usage with variables, this mental model works well!
 
 ---
 
