@@ -255,7 +255,37 @@ Moves b's contents (originally from c) into a
 Returns reference to a
 You're right that values are being moved, but the operator returns a reference to allow chaining. The reference isn't what's being assigned - it's just what's being returned to enable the next assignment.
 
+7. Q: return *this;   // Returns reference to current object can we also return &this; ? 
+7. A: No, we cannot return &this because:
+this is already a pointer to the current object
+&this would be a pointer to a pointer, which doesn't match our return type
+Here's what each would mean:
+```cpp 
+this      // Pointer to current object
+*this     // The current object itself (dereferenced)
+&this     // Address of the pointer (wrong!)
 
+Person& operator=(Person&& other) {
+    // ...
+    return *this;   // Correct: returns reference to object
+    return &this;   // Wrong: would return pointer to pointer
+}
+```
+Think of it like: 
+```cpp 
+Person obj;
+this         -> 0x123           // Memory address of obj
+*this        -> Person{...}     // The actual object
+&this        -> 0x456          // Address of the pointer (wrong!)
+
+// Return type is Person& (reference to Person)
+// *this gives us the Person object we can reference
+// &this would give us pointer to pointer (Person**)
+```
+Remember:
+When returning a reference (Person&), we need the object itself (*this)
+& of a pointer gives us a pointer-to-pointer, which isn't what we want
+*this dereferences the pointer to get the actual object we can reference
 
 
 
