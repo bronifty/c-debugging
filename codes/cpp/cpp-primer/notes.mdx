@@ -22,3 +22,20 @@ void bar(Person&& x) { ... }
 When the type is a variable (template/generic), && binds to that type-variable
 When the type is fixed (primitive/static), && can only bind to the data
 So yes, we could think of fixed types as "primitives" in the sense that they're not variable - they're predefined and immutable at the type level, just like JavaScript's primitive types. The reference (&&) always seeks a variable to bind to, whether that's a type-variable or a data-variable.
+
+## Pointers 
+
+```cpp
+int* ptr = new int(5);
+
+
+// Memory layout:
+// ptr         -> [Address1]  // ptr is a memory location storing Address2
+// Address1    -> [Address2]  // value stored in ptr (points to the int)
+// Address2    -> [5]        // value that ptr points to (*ptr)
+
+&ptr    // gives Address1 (ptr's own location)
+ptr     // gives Address2 (location of the int)
+*ptr    // gives 5 (value at Address2)
+```
+
