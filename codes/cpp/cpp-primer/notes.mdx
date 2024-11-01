@@ -1,0 +1,24 @@
+# Move Constructors
+
+## && Reference 
+```ts
+// Generic (like C++ template) - type T is a variable
+function foo<T>(x: T) { ... }
+
+// Fixed type (like C++ static type) - string is not a variable
+function bar(x: string) { ... }
+```
+
+```cpp
+// Template - T is a variable, && binds to type-variable first
+template<typename T>
+void foo(T&& x) { ... }
+
+// Fixed type - Person is not a variable, && can only bind to data
+void bar(Person&& x) { ... }
+```
+
+- The key insight:
+When the type is a variable (template/generic), && binds to that type-variable
+When the type is fixed (primitive/static), && can only bind to the data
+So yes, we could think of fixed types as "primitives" in the sense that they're not variable - they're predefined and immutable at the type level, just like JavaScript's primitive types. The reference (&&) always seeks a variable to bind to, whether that's a type-variable or a data-variable.
