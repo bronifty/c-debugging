@@ -439,3 +439,49 @@ Gives permission to move ("this can be stolen from")
 Actual moving happens in move constructors/assignment operators
 It's like putting a "free to take" sign on something - the sign doesn't move anything, it just indicates that moving is allowed!
 
+# Wrapper Class
+1. Q: does *parameter mean pointer? why not use a reference? (RawResourceHandle* rawHandle_) 
+2. Yes, RawResourceHandle* rawHandle_ is a pointer parameter. The choice between pointer and reference often depends on ownership semantics:
+```cpp 
+class ManagedResourceHandle {
+public:
+    // Pointer indicates ownership - this class will delete the resource
+    ManagedResourceHandle(RawResourceHandle* rawHandle_) 
+        : rawHandle(rawHandle_) {}
+    ~ManagedResourceHandle() { delete rawHandle; }
+
+private:
+    RawResourceHandle* rawHandle;  // Owns the resource
+};
+
+// vs
+
+class ResourceUser {
+public:
+    // Reference indicates "I'm just using it, not owning it"
+    ResourceUser(RawResourceHandle& resource_) 
+        : resource(resource_) {}
+    // No destructor needed - we don't own the resource
+
+private:
+    RawResourceHandle& resource;  // Just refers to resource
+};
+```
+Key differences:
+Ownership:
+Pointer (*): Can indicate ownership (responsibility to delete)
+Reference (&): Never indicates ownership
+Nullability:
+Pointer: Can be null
+Valid
+- Reference: Must refer to valid object
+initialized
+Lifetime:
+Pointer: Object might outlive pointer
+Reference: Referenced object must outlive reference
+In this case, pointer is used because:
+The class takes ownership of the resource
+It needs to delete the resource in destructor
+Might need to check for null
+This is a common pattern in resource management classes.
+
