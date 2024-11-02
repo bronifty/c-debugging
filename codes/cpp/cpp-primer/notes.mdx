@@ -409,3 +409,33 @@ function copyPerson(readonly person: Person)  // Can't modify
 function movePerson(person: Person)           // Can modify
 ```
 
+# Move Semantics
+
+1. Q: it looks like std::vector<int> &&rvalue_stealing_ints = std::move(stealing_ints); move operation converted the lvalue to an rvalue and assigned it to rvalue_stealing_ints as a reference to the lvalue, but did not change ownership. in this way, std::move acted as a cast, essentially of lvalue to rvalue type if you could call it that
+1. A: Yes, exactly! std::move is just a cast - it doesn't actually move anything. Let me break this down:
+```cpp 
+std::vector<int> &&rvalue_stealing_ints = std::move(stealing_ints);
+//                                       ^
+//                                       Just casts stealing_ints to an rvalue reference
+```
+What's happening:
+std::move(stealing_ints) is equivalent to static_cast<std::vector<int>&&>(stealing_ints)
+This just tells the compiler "treat this lvalue as an rvalue"
+No actual moving happens until this rvalue reference is used in a move operation
+For example:
+```cpp 
+// Just casting - no move yet
+std::vector<int> &&rref = std::move(vec);  
+
+// Actual move happens here
+std::vector<int> new_vec = std::move(vec);  // Move constructor called
+// or
+other_vec = std::move(vec);                 // Move assignment called
+```
+Think of std::move as:
+Not a move operation
+Just a type conversion from lvalue to rvalue reference
+Gives permission to move ("this can be stolen from")
+Actual moving happens in move constructors/assignment operators
+It's like putting a "free to take" sign on something - the sign doesn't move anything, it just indicates that moving is allowed!
+
