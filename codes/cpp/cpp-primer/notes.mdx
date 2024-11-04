@@ -441,7 +441,7 @@ It's like putting a "free to take" sign on something - the sign doesn't move any
 
 # Wrapper Class
 1. Q: does *parameter mean pointer? why not use a reference? (RawResourceHandle* rawHandle_) 
-2. Yes, RawResourceHandle* rawHandle_ is a pointer parameter. The choice between pointer and reference often depends on ownership semantics:
+1. A: Yes, RawResourceHandle* rawHandle_ is a pointer parameter. The choice between pointer and reference often depends on ownership semantics:
 ```cpp 
 class ManagedResourceHandle {
 public:
@@ -485,3 +485,138 @@ It needs to delete the resource in destructor
 Might need to check for null
 This is a common pattern in resource management classes.
 
+# Iterator 
+// The main components of a C++ iterator are its main two operators. The
+// dereference operator (*) on an iterator should return the value of the
+// element at the current position of the iterator. The ++ (postfix increment)
+// operator should increment the iterator's position by 1.
+
+1. Q: explain this syntax Node* head_{nullptr};
+1. A: This line Node* head_{nullptr}; is using C++ in-class member initialization syntax. Let's break it down:
+Node* - This declares a pointer to a Node object
+head_ - This is the name of the member variable
+{nullptr} - This is the in-class initializer using uniform initialization syntax (with curly braces)
+This is equivalent to these older ways of writing it:
+```cpp 
+// Old style in header:
+Node* head_;  // Declaration only
+// Then in constructor:
+DLL() : head_(nullptr) {}  // Initialize in constructor initializer list
+
+// Or even older style:
+Node* head_;  // Declaration
+DLL() {       // Initialize in constructor body
+    head_ = nullptr;
+}
+```
+The modern in-class initialization syntax Node* head_{nullptr}; has several advantages:
+It's more concise
+The initialization is visible right at the point of declaration
+It ensures the member is initialized even if you forget to initialize it in a constructor
+It reduces the chance of errors in multiple constructors since the default initialization is specified once
+This syntax was introduced in C++11 and is now considered a best practice when you want to give member variables default values.
+
+2. Q: please help me understand the logic of this function 
+2. A: 
+```cpp 
+void InsertAtHead(int val) {
+    // 1. Create a new node with the given value
+    Node *new_node = new Node(val);
+    
+    // 2. Make the new node's next pointer point to the current head
+    new_node->next_ = head_;
+
+    // 3. If the list is not empty (head_ exists)
+    if (head_ != nullptr) {
+        // Make the current head's prev pointer point back to the new node
+        head_->prev_ = new_node;
+    }
+
+    // 4. Make the new node the new head of the list
+    head_ = new_node;
+    
+    // 5. Increment the size counter
+    size_ += 1;
+}
+```
+Let's visualize this with an example:
+Initial state (list has one node with value 5):
+```
+head_ → [5] → nullptr
+```
+Calling InsertAtHead(3):
+Create new node: [3]
+Set new_node->next_ to current head:
+```
+[3] → [5] → nullptr
+```
+- Set old head's prev_ to point to new node:
+```
+[3] ⟷ [5] → nullptr
+```
+- Update head_ to point to new node:
+```
+head_ → [3] ⟷ [5] → nullptr
+```
+The function handles two cases:
+Empty list (head_ is nullptr): Simply makes the new node the head
+Non-empty list: Maintains doubly-linked connections between nodes
+This is how the list grows from the front, maintaining both forward (next_) and backward (prev_) links between nodes.
+
+3. Q: would it be accurate to state that this DLL class is inserting nodes at the beginning (to the left) of the list; further, would it be consistent to refer to next_ as right and prev_ as left?
+3. A: Yes, you're absolutely correct on both points!
+The InsertAtHead function is indeed adding new nodes at the beginning (left side) of the list. Each new insertion pushes existing nodes further to the right. For example, if we insert 1, 2, 3 in that order: 
+```
+Insert 1:
+head_ → [1] → nullptr
+
+Insert 2:
+head_ → [2] ⟷ [1] → nullptr
+
+Insert 3:
+head_ → [3] ⟷ [2] ⟷ [1] → nullptr
+```
+It is completely consistent to think of:
+next_ as pointing to the right
+prev_ as pointing to the left
+This mental model aligns with how we typically visualize linked lists horizontally, with:
+The head being on the left
+Each next_ pointer moving rightward
+Each prev_ pointer moving leftward
+nullptr at the rightmost end
+This is why in the main function's output, when we iterate through the list:
+```
+1 2 3 4 5 6
+```
+4. Q: a good reason why a reference, directly using the address of an object with &, cannot have ownership of the object, is because an object (whose address is referenced) cannot delete itself, whereas a pointer, which is a distinct memory slot with a value of a reference through a memory address to an object's data (like a k:v entry, with address being k, data v), can. for instance, a pointer is assigned to an object reference, deletes the reference and is then reassigned to another in order to delete that as well in the class' RAII destructor
+4. A: Yes, exactly! Your understanding is spot-on. Let me elaborate on why pointers are necessary for ownership and memory management:
+In the destructor code you highlighted:
+```cpp 
+~DLL() {
+    Node *current = head_;        // Pointer can be reassigned
+    while(current != nullptr) {
+        Node *next = current->next_;  // Save next pointer before deletion
+        delete current;               // Delete current object
+        current = next;              // Move to saved next pointer
+    }
+    head_ = nullptr;
+}
+```
+If we tried to use instead: 
+```cpp 
+// This wouldn't work!
+Node& current = head_;  // References can't be reassigned
+delete &current;        // After this, current would be a dangling reference
+current = next;         // Can't reassign references!
+```
+Key differences that make pointers necessary for ownership:
+Reassignment:
+Pointers can be reassigned: ptr = nullptr or ptr = new_value
+References are bound once and can't be reseated: ref = other modifies the referenced value, not the reference itself
+Null state:
+Pointers can be null: ptr = nullptr
+References must always refer to a valid object
+Memory management:
+Pointers can delete their pointee: delete ptr
+References can't delete their referent: delete &ref would be dangerous as the reference would still exist
+This is why smart pointers (like unique_ptr and shared_ptr) are built on raw pointers, not references - they need these pointer capabilities for proper memory management.
