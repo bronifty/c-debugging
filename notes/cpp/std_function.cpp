@@ -42,7 +42,8 @@ int main()
     print_num(f3(9));
 
 // Specify return type explicitly
-auto f4 = [](int x) -> double { return x * 1.5; };
+    auto f4 = [](int x) -> double { return x * 1.5; };
+    print_num(f4(9));
 
 // Store in std::function
 std::function<int(int)> f5 = [](int x) { return x * 2; };

@@ -777,3 +777,56 @@ f_display_42();  // Calls the lambda just like a regular function
 auto multiply = [](int x, int y) { return x * y; };
 int result = multiply(5, 3);  // result = 15
 ```
+
+### std::function Type Syntax
+
+Q: Explain the std::function syntax for specifying parameter and return types?
+
+A: The std::function template uses angle brackets to specify the function signature:
+
+```cpp
+std::function<return_type(parameter_types)>
+```
+
+Examples:
+```cpp
+// Function taking int, returning int
+std::function<int(int)> f1 = [](int x) { return x * 2; };
+
+// Function taking no parameters, returning void
+std::function<void()> f2 = []() { cout << "Hello"; };
+
+// Function taking multiple parameters
+std::function<double(int, float)> f3 = [](int x, float y) { 
+    return x * y; 
+};
+
+// Function returning bool
+std::function<bool(string)> f4 = [](string s) { 
+    return s.empty(); 
+};
+```
+
+Breaking down the syntax:
+- Inside <...> is the complete function type
+- Before the parentheses: return type
+- Inside parentheses: parameter types
+- Empty parentheses () means no parameters
+
+Common patterns:
+```cpp
+std::function<void()>      // Takes nothing, returns nothing
+std::function<int(int)>    // Takes int, returns int
+std::function<void(int)>   // Takes int, returns nothing
+std::function<int()>       // Takes nothing, returns int
+```
+
+This is similar to regular function declarations, just wrapped in std::function<...>:
+```cpp
+// Regular function:
+int foo(int x) { return x * 2; }
+
+// As std::function:
+std::function<int(int)> foo = [](int x) { return x * 2; };
+```
+
