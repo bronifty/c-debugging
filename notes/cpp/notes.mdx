@@ -716,3 +716,64 @@ Common places you'll see size_t:
 - Array indexing: array[size_t index]
 - Memory operations: sizeof returns size_t
 - String lengths: string::length() returns size_t
+```
+
+## Lambda Functions
+
+Q: Please explain this syntax:
+```cpp
+// store a lambda
+std::function<void()> f_display_42 = []() { print_num(42); };
+f_display_42();
+```
+
+A: Let's break down this lambda function syntax:
+
+```cpp
+std::function<void()>    // Type: function taking no args, returning void
+f_display_42 =          // Name of our function variable
+[]                     // Lambda introducer (capture clause)
+()                     // Parameter list (empty in this case)
+{ print_num(42); }     // Function body
+;                      // End of statement
+```
+
+Components of a lambda:
+1. std::function<return_type(param_types)>
+   - Modern C++ way to store function objects
+   - void() means "takes no parameters, returns nothing"
+
+2. Capture clause []
+   - Empty [] means capture nothing from outer scope
+   - [=] captures everything by value
+   - [&] captures everything by reference
+   - [x] captures x by value
+   - [&x] captures x by reference
+
+Examples of different lambda syntaxes:
+```cpp
+// No capture, no parameters
+auto f1 = []() { cout << "Hello"; };
+
+// Capture local variable by value
+int multiplier = 10;
+auto f2 = [multiplier](int x) { return x * multiplier; };
+
+// Capture by reference
+auto f3 = [&multiplier](int x) { multiplier = x; };  // Can modify multiplier
+
+// Specify return type explicitly
+auto f4 = [](int x) -> double { return x * 1.5; };
+
+// Store in std::function
+std::function<int(int)> f5 = [](int x) { return x * 2; };
+```
+
+Using the stored lambda:
+```cpp
+f_display_42();  // Calls the lambda just like a regular function
+
+// Or with parameters
+auto multiply = [](int x, int y) { return x * y; };
+int result = multiply(5, 3);  // result = 15
+```
