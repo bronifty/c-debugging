@@ -1,6 +1,7 @@
-# Move Constructors
+# CPP Primer Notes
+## Move Constructors
 
-## && Reference 
+### && Reference 
 ```ts
 // Generic (like C++ template) - type T is a variable
 function foo<T>(x: T) { ... }
@@ -23,7 +24,7 @@ When the type is a variable (template/generic), && binds to that type-variable
 When the type is fixed (primitive/static), && can only bind to the data
 So yes, we could think of fixed types as "primitives" in the sense that they're not variable - they're predefined and immutable at the type level, just like JavaScript's primitive types. The reference (&&) always seeks a variable to bind to, whether that's a type-variable or a data-variable.
 
-## Pointers 
+### Pointers 
 
 ```cpp
 int* ptr = new int(5);
@@ -39,7 +40,7 @@ ptr     // gives Address2 (location of the int)
 *ptr    // gives 5 (value at Address2)
 ```
 
-## Move Assignment Operator
+### Move Assignment Operator
 
 ```cpp 
 Person &operator=(Person &&other)
@@ -72,7 +73,7 @@ a = std::move(b);  // b is converted to rvalue
 
 The reason *this must be an lvalue is because it refers to the persistent object that continues to exist after the operation. It's not temporary data (rvalue) - it's the actual object in memory that we want to keep using.
 
-### LLM Q&A
+#### LLM Q&A
 1. Q: in C++ when std::move(Person&&) is called, that is a function implemented by the Person class, and specifically in the move assignement operator Person &operator=(Person &&other) {...}?
 1. A: Not exactly. Let me clarify:
 std::move() is a standard library function, not a member of the Person class
@@ -361,7 +362,7 @@ int&& rref = 5;       // Rvalue reference: can bind to temporary
 ```
 ---
 
-## Const Reference / Copy Constructor 
+### Const Reference / Copy Constructor 
 
 ```cpp
 // Copy constructor
@@ -409,7 +410,7 @@ function copyPerson(readonly person: Person)  // Can't modify
 function movePerson(person: Person)           // Can modify
 ```
 
-# Move Semantics
+## Move Semantics
 
 1. Q: it looks like std::vector<int> &&rvalue_stealing_ints = std::move(stealing_ints); move operation converted the lvalue to an rvalue and assigned it to rvalue_stealing_ints as a reference to the lvalue, but did not change ownership. in this way, std::move acted as a cast, essentially of lvalue to rvalue type if you could call it that
 1. A: Yes, exactly! std::move is just a cast - it doesn't actually move anything. Let me break this down:
@@ -439,7 +440,7 @@ Gives permission to move ("this can be stolen from")
 Actual moving happens in move constructors/assignment operators
 It's like putting a "free to take" sign on something - the sign doesn't move anything, it just indicates that moving is allowed!
 
-# Wrapper Class
+## Wrapper Class
 1. Q: does *parameter mean pointer? why not use a reference? (RawResourceHandle* rawHandle_) 
 1. A: Yes, RawResourceHandle* rawHandle_ is a pointer parameter. The choice between pointer and reference often depends on ownership semantics:
 ```cpp 
@@ -485,7 +486,7 @@ It needs to delete the resource in destructor
 Might need to check for null
 This is a common pattern in resource management classes.
 
-# Iterator 
+## Iterator 
 // The main components of a C++ iterator are its main two operators. The
 // dereference operator (*) on an iterator should return the value of the
 // element at the current position of the iterator. The ++ (postfix increment)
@@ -620,4 +621,5 @@ Memory management:
 Pointers can delete their pointee: delete ptr
 References can't delete their referent: delete &ref would be dangerous as the reference would still exist
 This is why smart pointers (like unique_ptr and shared_ptr) are built on raw pointers, not references - they need these pointer capabilities for proper memory management.
+
 
