@@ -926,3 +926,70 @@ Key points:
 - Temporary object is destroyed after the expression
 - Often used when you need a string object but have a string literal
 
+### std::bind and Placeholders
+
+Q: Please explain this syntax:
+```cpp
+using std::placeholders::_1;
+std::function<void(int)> f_add_display2 = std::bind(&Foo::print_add, foo, _1);
+f_add_display2(2);
+```
+
+A: This code demonstrates std::bind, which creates a new function object by "binding" some arguments of an existing function. Let's break it down:
+
+1. Original member function:
+```cpp
+class Foo {
+    void print_add(int x);  // Takes 2 things: implicit this pointer and int
+};
+```
+
+2. Binding syntax:
+```cpp
+std::bind(&Foo::print_add,  // Member function to bind
+          foo,              // Object to bind as 'this'
+          _1)              // Placeholder for argument to remain unbound
+```
+
+What's happening:
+- &Foo::print_add is a pointer to the member function
+- foo is bound as the object (this)
+- _1 is a placeholder saying "first argument will be provided later"
+- Result is a function that only needs the int parameter
+
+Example with different bindings:
+```cpp
+// Bind both object and parameter
+auto f1 = std::bind(&Foo::print_add, foo, 42);
+f1();  // Calls foo.print_add(42)
+
+// Bind just object
+auto f2 = std::bind(&Foo::print_add, foo, _1);
+f2(42);  // Calls foo.print_add(42)
+
+// Bind just parameter
+auto f3 = std::bind(&Foo::print_add, _1, 42);
+f3(foo);  // Calls foo.print_add(42)
+```
+
+Placeholders:
+- _1, _2, _3, etc. represent future arguments
+- Order matches the order of arguments in the call
+```cpp
+// For a two-parameter function
+void func(int x, int y);
+
+auto bound = std::bind(func, _2, _1);  // Swaps argument order
+bound(5, 3);  // Calls func(3, 5)
+```
+
+Modern alternative:
+In modern C++, lambda expressions are often preferred over std::bind:
+```cpp
+// Instead of bind:
+auto f = std::bind(&Foo::print_add, foo, _1);
+
+// Equivalent lambda:
+auto f = [&foo](int x) { foo.print_add(x); };
+```
+
