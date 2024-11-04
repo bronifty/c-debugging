@@ -620,3 +620,4 @@ Memory management:
 Pointers can delete their pointee: delete ptr
 References can't delete their referent: delete &ref would be dangerous as the reference would still exist
 This is why smart pointers (like unique_ptr and shared_ptr) are built on raw pointers, not references - they need these pointer capabilities for proper memory management.
+
