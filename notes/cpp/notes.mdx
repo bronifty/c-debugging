@@ -568,13 +568,14 @@ This is how the list grows from the front, maintaining both forward (next_) and 
 3. A: Yes, you're absolutely correct on both points!
 The InsertAtHead function is indeed adding new nodes at the beginning (left side) of the list. Each new insertion pushes existing nodes further to the right. For example, if we insert 1, 2, 3 in that order: 
 ```
-Insert 1:
 head_ → [1] → nullptr
-
+```
 Insert 2:
+```
 head_ → [2] ⟷ [1] → nullptr
-
+```
 Insert 3:
+```
 head_ → [3] ⟷ [2] ⟷ [1] → nullptr
 ```
 It is completely consistent to think of:
@@ -877,3 +878,51 @@ foo(string("hello"));
 void bar(string& s) { ... }
 bar(string("hello"));  // Error!
 ```
+
+### String Constructor Syntax
+
+Q: Please explain this syntax:
+```cpp
+foo(string("hello"));  // What's happening here?
+```
+
+A: This is creating a temporary string object using a string constructor. Let's break it down:
+
+```cpp
+string("hello")       // Constructor call creating temporary string
+foo(...)             // Passing temporary string to function
+```
+
+Different ways to create strings:
+```cpp
+// Direct initialization with constructor
+string str1("hello");           // Using constructor directly
+foo(string("hello"));          // Temporary object with constructor
+
+// Copy initialization with =
+string str2 = "hello";         // Implicit conversion from const char*
+foo(string = "hello");         // Same as above, but temporary
+
+// Modern brace initialization
+string str3{"hello"};          // Direct list initialization
+foo(string{"hello"});          // Temporary with brace initialization
+```
+
+When used in function calls:
+```cpp
+// These are equivalent:
+void foo(const string& s) { ... }
+
+foo(string("hello"));          // Explicit temporary
+foo("hello");                  // Implicit conversion to temporary string
+
+// Under the hood, the second call is converted to:
+foo(string("hello"));          // Compiler adds constructor call
+```
+
+Key points:
+- string("hello") calls the string constructor
+- Creates a temporary string object
+- Temporary object is destroyed after the expression
+- Often used when you need a string object but have a string literal
+
