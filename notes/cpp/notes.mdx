@@ -616,7 +616,9 @@ Pointers can be reassigned: ptr = nullptr or ptr = new_value
 References are bound once and can't be reseated: ref = other modifies the referenced value, not the reference itself
 Null state:
 Pointers can be null: ptr = nullptr
-References must always refer to a valid object
+Valid
+- Reference: Must refer to valid object
+initialized
 Memory management:
 Pointers can delete their pointee: delete ptr
 References can't delete their referent: delete &ref would be dangerous as the reference would still exist
@@ -677,4 +679,40 @@ for (int i = 0; i < vec.size(); i++) {
 
 The & in the loop syntax creates a reference variable, rather than getting an address like & does in other contexts.
 
+Q: what is size_t?
 
+## Common Types
+
+### size_t
+`size_t` is an unsigned integer type that is used to represent sizes and counts. It's particularly important when working with container sizes and array indices.
+
+```cpp
+// Using size_t for array indexing
+for (size_t i = 0; i < vector.size(); ++i) {
+    // size_t is guaranteed to be big enough for any array index
+}
+```
+
+Key points about size_t:
+- Unsigned integer type (can't be negative)
+- Guaranteed to be large enough to contain the size of any object
+- Usually 32 bits on 32-bit systems, 64 bits on 64-bit systems
+- Preferred type for array indices and sizes
+- Returned by sizeof operator and container size() methods
+
+Why use size_t instead of int:
+```cpp
+vector<int> vec(1000000000);  // Large vector
+
+// Bad: int might overflow on some systems
+for (int i = 0; i < vec.size(); i++) { }
+
+// Good: size_t guaranteed to handle any valid size
+for (size_t i = 0; i < vec.size(); i++) { }
+```
+
+Common places you'll see size_t:
+- Container sizes: vector.size() returns size_t
+- Array indexing: array[size_t index]
+- Memory operations: sizeof returns size_t
+- String lengths: string::length() returns size_t
