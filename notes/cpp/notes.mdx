@@ -830,3 +830,50 @@ int foo(int x) { return x * 2; }
 std::function<int(int)> foo = [](int x) { return x * 2; };
 ```
 
+### Member Function Pointers
+
+Q: In this code, why do both function calls work? Shouldn't the second one error since it doesn't use a Foo object?
+```cpp
+// store a call to a member function
+std::function<void(const Foo&, int)> f_add_display = &Foo::print_add;
+const Foo foo(314159);
+f_add_display(foo, 1);           // Using Foo object
+f_add_display(314159, 1);        // Using temporary Foo object - why does this work?
+```
+
+A: Both calls work because of how C++ handles temporary objects. Let's break it down:
+
+1. The function type `void(const Foo&, int)` means:
+   - First parameter: const reference to Foo
+   - Second parameter: int
+   - Returns: void
+
+2. When you call `f_add_display(314159, 1)`:
+   - C++ creates a temporary Foo object using 314159
+   - The temporary object is bound to the const reference parameter
+   - After the call, the temporary object is destroyed
+
+It's equivalent to:
+```cpp
+// This:
+f_add_display(314159, 1);
+
+// Is similar to:
+const Foo temp(314159);  // Temporary object created
+f_add_display(temp, 1);  // Used in function call
+// temp is destroyed here
+```
+
+Key points:
+- Const references can bind to temporary objects
+- Non-const references cannot bind to temporaries (would error)
+- This is why const references are often used in parameters
+```cpp
+// This works - const reference can bind to temporary
+void foo(const string& s) { ... }
+foo(string("hello"));
+
+// This errors - non-const reference can't bind to temporary
+void bar(string& s) { ... }
+bar(string("hello"));  // Error!
+```
