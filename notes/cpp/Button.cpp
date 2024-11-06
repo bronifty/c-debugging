@@ -24,8 +24,8 @@ int main() {
     // Set up click handler with counter
     int count = 0;
     btn.setHandler([count]() mutable { 
-        count++;  
-        std::cout << "Clicked " << count << " times\n";
+        // count++;  
+        std::cout << "Clicked " << ++count << " times\n";
     });
 
     // Simulate some clicks
