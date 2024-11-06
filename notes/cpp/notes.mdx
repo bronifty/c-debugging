@@ -2192,14 +2192,12 @@ Visual Stack Growth:
 ```
 Before function:          After allocations:
 +----------------+       +----------------+
-|                |       | string s       | <- SP after
-+----------------+       +----------------+
-|                |       | Point p        |
-+----------------+       +----------------+
-|                |       | int x          |
-+----------------+ <- SP +----------------+
-| previous frame |       | previous frame |
-+----------------+       +----------------+
+| caller data |        | local vars  | <- esp (frame top)
++----------------+ <-esp  +----------------+
+                      | saved ebp   | <- ebp (frame base)
+                      +-------------+
+                      | caller data |
+                      +-------------+
 ```
 
 Why it's fast:
@@ -2371,7 +2369,7 @@ Visual Stack Growth:
 Before Call:           After Prologue:
 +-------------+        +-------------+
 | caller data |        | local vars  | <- esp (frame top)
-+-------------+ <-esp  +-------------+
++-------------+ <-esp  +----------------+
                       | saved ebp   | <- ebp (frame base)
                       +-------------+
                       | caller data |
@@ -2552,4 +2550,202 @@ Think of join() like:
 - A parent waiting for a child to finish a task
 - A checkpoint where parallel execution becomes sequential again
 - A synchronization point between threads
+
+### Thread Join vs JavaScript Await
+
+Q: Is thread.join() like await in JavaScript? And what does explicit mean in `explicit ThreadGuard(std::thread t) : t_(std::move(t)) {}`?
+
+A: While similar, join() and await have key differences:
+
+1. join() vs await:
+```cpp
+// C++ join() - blocks until thread completes
+std::thread t1(work);
+t1.join();  // Blocks here until t1 finishes
+
+// JavaScript await - yields control while waiting
+async function foo() {
+    await someWork();  // Yields control, can run other code
+}
+```
+
+Key differences:
+- join() blocks the calling thread completely
+- await yields control back to event loop
+- join() can only be called once
+- await can be used multiple times
+
+2. explicit keyword:
+```cpp
+class ThreadGuard {
+    std::thread t_;
+public:
+    explicit ThreadGuard(std::thread t)  // Prevents implicit conversion
+        : t_(std::move(t)) {}           // Takes thread by value, then moves it
+};
+```
+
+The explicit keyword:
+- Prevents implicit type conversions
+- Forces users to be explicit about construction
+- Example of what it prevents:
+```cpp
+// Without explicit:
+ThreadGuard guard = std::thread(func);  // Would allow implicit conversion
+
+// With explicit:
+ThreadGuard guard(std::thread(func));   // Must be explicit
+```
+
+3. About the move operation:
+```cpp
+explicit ThreadGuard(std::thread t)  // t is taken by value
+    : t_(std::move(t))              // then moved into member
+```
+
+Why it works this way:
+- Parameter t is already a value (copied or moved from caller)
+- std::move(t) moves from this parameter into the member t_
+- Common pattern: take by value, then move
+- Allows both:
+```cpp
+std::thread t(func);
+ThreadGuard g1(t);                    // Takes lvalue
+ThreadGuard g2(std::thread(func));    // Takes rvalue
+```
+
+This is called "pass by value, move from parameter" idiom:
+- Simplifies interface (one function instead of two)
+- Still efficient with move semantics
+- Works with both lvalues and rvalues
+```
+
+### ThreadGuard Constructor Design
+
+Q: Could ThreadGuard's constructor use lvalue (&) or rvalue (&&) references instead? Why use explicit with pass-by-value? How is the thread safely manipulated?
+
+A: The design choice of using pass-by-value has specific benefits. Let's analyze the options:
+
+1. Current design (pass by value):
+```cpp
+class ThreadGuard {
+    std::thread t_;
+public:
+    explicit ThreadGuard(std::thread t)      // Pass by value
+        : t_(std::move(t)) {}               // Move into member
+};
+```
+
+2. Alternative designs (what we could do):
+```cpp
+// Lvalue reference - problematic
+ThreadGuard(std::thread& t) : t_(t) {}        // Can't take ownership!
+
+// Rvalue reference - works but limited
+ThreadGuard(std::thread&& t) : t_(std::move(t)) {}  // Only takes rvalues
+```
+
+Why pass-by-value is better:
+```cpp
+// Current design handles both cases:
+std::thread t(work);
+ThreadGuard g1(t);                    // Works: t copied then moved
+ThreadGuard g2(std::thread(work));    // Works: temporary moved twice
+
+// With rvalue reference:
+ThreadGuard g1(t);                    // Error: won't accept lvalue
+ThreadGuard g2(std::thread(work));    // Works
+```
+
+Safety considerations:
+```cpp
+class ThreadGuard {
+    std::thread t_;
+public:
+    explicit ThreadGuard(std::thread t)  // t is a complete object
+        : t_(std::move(t)) {}           // Safe to move from
+    
+    ~ThreadGuard() {
+        if(t_.joinable()) {  // Safe to check - we own t_
+            t_.join();       // Safe to join - we own t_
+        }
+    }
+    
+    // Delete copy operations - threads can't be copied
+    ThreadGuard(const ThreadGuard&) = delete;
+    ThreadGuard& operator=(const ThreadGuard&) = delete;
+};
+```
+
+Key points:
+- explicit prevents implicit conversions but doesn't affect value category
+- Pass-by-value ensures we get our own copy to move from
+- std::thread is move-only (can't be copied)
+- Taking ownership by value is safe because:
+  - We get a complete object
+  - We can safely move from it
+  - Original thread (if from lvalue) remains untouched
+  - Temporary threads (if from rvalue) are properly moved
+```
+
+### Pass by Value then Move Pattern
+
+Q: In pass-by-value-then-move, are we creating a copy of the pointer and then moving its data? How does the original data get moved?
+
+A: Let's break down exactly what happens in this pattern:
+
+```cpp
+class ThreadGuard {
+    std::thread t_;
+public:
+    explicit ThreadGuard(std::thread t)      // Pass by value
+        : t_(std::move(t)) {}               // Move into member
+};
+```
+
+What happens with an lvalue:
+```cpp
+std::thread original(work);
+ThreadGuard guard(original);   // Two steps:
+// 1. Parameter copy: original -> parameter t (move constructor)
+// 2. Member init: parameter t -> member t_ (move constructor)
+// original remains valid but empty (moved-from)
+```
+
+What happens with an rvalue:
+```cpp
+ThreadGuard guard(std::thread(work));  // Two steps:
+// 1. Parameter copy: temporary -> parameter t (move constructor)
+// 2. Member init: parameter t -> member t_ (move constructor)
+// Temporary is already gone
+```
+
+Key insights:
+- std::thread is move-only (can't be truly copied)
+- "Pass by value" for move-only types means:
+  ```cpp
+  void foo(std::thread t) {  // t constructed by moving from argument
+      // t owns the thread here
+  }
+  ```
+- The "copy" is actually a move operation
+- Original thread is moved twice:
+  1. Into parameter
+  2. Into member
+
+Think of it like a relay race:
+```cpp
+std::thread original(work);     // Runner 1 has baton
+ThreadGuard guard(original);    // Passes to Runner 2 (parameter)
+                               // Who passes to Runner 3 (member)
+// original is now empty        // Runner 1 has no baton
+// guard.t_ owns the thread    // Runner 3 has baton
+```
+
+This pattern is safe because:
+- Move operations transfer ownership cleanly
+- Each move leaves the source in a valid but empty state
+- Final owner (member t_) gets exclusive ownership
+- Original thread (if from lvalue) is properly emptied
+```
 
