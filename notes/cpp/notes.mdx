@@ -2434,3 +2434,51 @@ First Floor (Callee)
     |
 Ground Floor (Caller)
 ```
+
+### Shared Pointer Parameter Passing
+
+Q: Why doesn't this function increment use_count of the parameter passed in?
+```cpp
+void copy_shared_ptr_in_function(std::shared_ptr<Point> point) {
+  std::cout << "Use count of shared pointer is " << point.use_count()
+            << std::endl;
+}
+```
+
+A: The use_count does increment temporarily, but we don't see a lasting increment because:
+
+1. Parameter passing lifecycle:
+```cpp
+// Outside function
+std::shared_ptr<Point> original(new Point);  // use_count = 1
+
+// When function is called:
+void copy_shared_ptr_in_function(std::shared_ptr<Point> point) {
+    // point is a copy, use_count briefly becomes 2
+    std::cout << use_count();  // Shows 2
+}   // point is destroyed here, use_count returns to 1
+
+// Back outside, use_count is 1 again
+```
+
+2. What's happening:
+- Parameter is passed by value, creating a copy
+- Copy constructor increments use_count
+- Function scope ends, destroying the copy
+- Destructor decrements use_count back
+- Net effect: no lasting change to use_count
+
+3. To see lasting changes, you would need to either:
+```cpp
+// Pass by reference - no copying
+void ref_func(const std::shared_ptr<Point>& point);
+
+// Store the copy
+std::shared_ptr<Point> stored_copy;
+void storing_func(std::shared_ptr<Point> point) {
+    stored_copy = point;  // Keeps copy alive after function returns
+}
+```
+
+This behavior is by design - temporary copies in function parameters don't affect the lifetime management of the original shared pointer.
+
