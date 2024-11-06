@@ -1724,31 +1724,36 @@ dangling_ref → [????]  (freed memory)
 
 Safe alternatives:
 ```cpp
-// 1. Use smart pointers
-std::shared_ptr<int> ptr = std::make_shared<int>(42);
-int& ref = *ptr;  // Reference valid as long as ptr exists
+// 1. Stack allocation - memory valid until scope ends
+{
+    int value = 42;
+    int& ref = value;
+    // ref valid until end of scope
+}  // Both value and ref destroyed here
 
-// 2. Ensure proper ownership
+// 2. Smart pointers - memory valid until last reference gone
+{
+    auto ptr = std::make_shared<int>(42);
+    int& ref = *ptr;
+    // ref valid as long as ptr exists
+}  // ptr destroyed, memory freed, ref goes out of scope
+
+// 3. Clear ownership - owner controls lifetime
 class Owner {
-    int value_;
+    int* ptr_;
+    int& ref_;
 public:
-    int& get_ref() { return value_; }  // Safe - refers to member
+    Owner() : ptr_(new int(42)), ref_(*ptr_) {}
+    ~Owner() { delete ptr_; }  // ref_ automatically invalidated
 };
-
-// 3. Stack allocation
-int stack_val = 42;
-int& ref = stack_val;  // Reference to stack variable
 ```
 
-Best practice:
-```cpp
-// Instead of raw new/delete:
-std::shared_ptr<int> ptr = std::make_shared<int>(42);
-int& ref = *ptr;  // Safe - memory managed by shared_ptr
-
-// Or better, avoid heap if possible:
-int value = 42;
-int& ref = value;  // Reference to stack variable
+Key points:
+- References and pointers to deleted memory are both dangling
+- Using either after deletion is undefined behavior
+- Can't "fix" a dangling reference (can't reassign)
+- Best to avoid situations where references can dangle
+- Use stack allocation or smart pointers when possible
 ```
 
 ### Reference Member Lifetimes
