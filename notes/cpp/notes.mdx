@@ -572,7 +572,7 @@ head_ → [1] → nullptr
 ```
 Insert 2:
 ```
-head_ → [2] ⟷ [1] → nullptr
+head_ → [2] ��� [1] → nullptr
 ```
 Insert 3:
 ```
@@ -2056,3 +2056,106 @@ void slowerAlloc() {
 Think of it like:
 - Stack: Like a stack of plates - automatic and ordered
 - Heap: Like a storage room - flexible but needs management
+```
+
+### Function Closures and Scope
+
+Q: How does C++ handle function closures? Could a function return a value and be in scope of another function surrounding it?
+
+A: Yes, C++ supports closures through lambda expressions that can capture variables from their enclosing scope. Here's how it works:
+
+```cpp
+// Basic closure example:
+void outer() {
+    int x = 42;
+    auto closure = [x]() { return x; };  // Captures x by value
+    // closure can be used here
+}
+
+// Capturing by reference:
+void outer() {
+    int x = 42;
+    auto closure = [&x]() { x++; };  // Can modify x
+    closure();  // x is now 43
+}
+```
+
+Different capture methods:
+```cpp
+// 1. Capture by value [=]
+void outer() {
+    int x = 1, y = 2;
+    auto closure = [=]() { return x + y; };  // Copy of x and y
+}
+
+// 2. Capture by reference [&]
+void outer() {
+    int x = 1, y = 2;
+    auto closure = [&]() { x++; y++; };  // Reference to x and y
+}
+
+// 3. Mixed capture
+void outer() {
+    int x = 1, y = 2;
+    auto closure = [=, &y]() { return x + (y++); };  // x by value, y by ref
+}
+```
+
+Returning closures:
+```cpp
+// Return a lambda that captures local variables
+auto make_counter() {
+    int count = 0;  // Local variable
+    return [count]() mutable { return ++count; };  // Returns closure
+}
+
+// Using it:
+auto counter = make_counter();
+cout << counter() << endl;  // 1
+cout << counter() << endl;  // 2
+```
+
+Lifetime considerations:
+```cpp
+// DANGEROUS - capturing reference to local variable
+auto make_bad_closure() {
+    int local = 42;
+    return [&local]() { return local; };  // DANGER: local will be destroyed!
+}
+
+// SAFE - capturing by value
+auto make_good_closure() {
+    int local = 42;
+    return [local]() { return local; };  // Safe: local is copied
+}
+```
+
+Common patterns:
+```cpp
+// Event handler with context
+class Button {
+    std::function<void()> onClick_;
+public:
+    template<typename F>
+    void setHandler(F&& handler) {
+        onClick_ = std::forward<F>(handler);
+    }
+};
+
+// Using it:
+void setup() {
+    int count = 0;
+    Button btn;
+    btn.setHandler([count]() mutable { 
+        count++;  // Local state in closure
+        cout << "Clicked " << count << " times\n";
+    });
+}
+```
+
+Key points:
+- Lambdas can capture variables from enclosing scope
+- Capture by value creates a copy
+- Capture by reference must ensure referenced variables stay alive
+- mutable keyword allows modification of captured values
+- Be careful with lifetime of captured references
