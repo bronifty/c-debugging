@@ -1609,7 +1609,6 @@ class Handler {
 ```cpp
 class View {
     const Model& model_;  // Long-term borrow
-    Controller& ctrl_;    // Another long-term borrow
 };
 ```
 
@@ -1666,16 +1665,18 @@ void process(const Widget& w);  // Can't accidentally modify
 
 // 2. Document lifetime requirements
 class View {
-    const Model& model_;  // Document: model must outlive View
+    const Model& model_;  // Document: "Model must outlive View"
+public:
+    // Constructor documents requirement
+    View(const Model& m) : model_(m) {
+        // Caller responsible for keeping Model alive
+    }
 };
 
-// 3. Consider alternatives to long-term borrows
-class SafeView {
-    shared_ptr<Model> model_;  // Ownership instead of borrowing
+// 3. Value semantics
+class IndependentView {
+    Model model_;  // Own copy of Model
 };
-
-// 4. Use references for "views" into data
-void print_slice(string_view s);  // Temporary view into string
 ```
 
 ### Dangling References
@@ -1738,6 +1739,84 @@ Key points:
 - Deleting referenced memory creates dangling reference
 - Reference continues to exist after delete
 - Using dangling reference is undefined behavior
+```
+
+### Reference Member Lifetimes
+
+Q: Why must Model outlive View in this code?
+```cpp
+class View {
+    const Model& model_;  // Model must outlive View - but why?
+};
+```
+
+A: The Model must outlive the View because the View holds a reference to it. If Model is destroyed while View still exists, View would have a dangling reference. Let's see examples:
+
+```cpp
+// Dangerous - View outlives Model:
+{
+    Model model;
+    View view(model);
+    // model destroyed here
+} // view tries to use dangling reference to destroyed model!
+
+// Safe - Model outlives View:
+{
+    Model model;
+    {
+        View view(model);
+        // view destroyed first
+    }
+    // model destroyed after view
+}
+```
+
+Think of it like:
+- View is borrowing the Model through its reference
+- Can't destroy something being borrowed
+- Reference member = dependency on original object's lifetime
+
+Common mistakes:
+```cpp
+View* createView() {
+    Model model;                // Local Model
+    return new View(model);     // DANGER: Returns view with dangling reference
+}                              // model destroyed, View refers to invalid memory
+
+// Safe version:
+View* createView(Model& model) {  // Model managed externally
+    return new View(model);       // Safe if caller keeps Model alive
+}
+```
+
+Solutions:
+```cpp
+// 1. Ownership semantics with smart pointer
+class SafeView {
+    std::shared_ptr<Model> model_;  // Keeps Model alive
+};
+
+// 2. Explicit lifetime documentation
+class View {
+    const Model& model_;  // Document: "Model must outlive View"
+public:
+    // Constructor documents requirement
+    View(const Model& m) : model_(m) {
+        // Caller responsible for keeping Model alive
+    }
+};
+
+// 3. Value semantics
+class IndependentView {
+    Model model_;  // Own copy of Model
+};
+```
+
+Key points:
+- References must point to valid objects
+- Referenced object must outlive the reference
+- Class holding reference depends on referenced object's lifetime
+- Consider ownership alternatives for complex lifetime requirements
 ```
 
 
