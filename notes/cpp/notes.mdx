@@ -557,7 +557,7 @@ Set new_node->next_ to current head:
 ```
 - Update head_ to point to new node:
 ```
-head_ → [3] ⟷ [5] → nullptr
+head_ → [3] ⟷ [5] ��� nullptr
 ```
 The function handles two cases:
 Empty list (head_ is nullptr): Simply makes the new node the head
@@ -2328,4 +2328,109 @@ setHandler(lambda)  -> std::forward -> std::function::operator=
 //    |                    |                    |
 // Takes universal    Preserves type      Creates wrapper
 // reference         for forwarding      and stores copy
+```
+
+### Stack and Base Pointer Operations
+
+Q: Please further articulate what is going on around this pseudocode, especially the base versus stack pointer and then returning to the caller:
+```cpp
+// Function prologue (compiler generated)
+push ebp           // Save old base pointer
+mov ebp, esp       // Set up new base pointer
+sub esp, N         // Allocate N bytes for locals
+
+// Your code runs here
+
+// Function epilogue (compiler generated)
+mov esp, ebp       // Restore stack pointer
+pop ebp            // Restore base pointer
+ret                // Return to caller
+```
+
+A: Let's break down exactly what happens when a function is called:
+
+1. Function Frame Setup:
+```nasm
+; Before function call:
+;  esp/ebp point to current frame
+;
+push ebp           ; Save caller's base pointer
+;  Stack: [old_ebp]
+;
+mov ebp, esp       ; Create new frame base
+;  ebp now points to saved old_ebp
+;  This becomes our reference point
+;
+sub esp, N         ; Make room for local variables
+;  esp moves down N bytes
+;  Space between esp and ebp is our frame
+```
+
+Visual Stack Growth:
+```
+Before Call:           After Prologue:
++-------------+        +-------------+
+| caller data |        | local vars  | <- esp (frame top)
++-------------+ <-esp  +-------------+
+                      | saved ebp   | <- ebp (frame base)
+                      +-------------+
+                      | caller data |
+                      +-------------+
+```
+
+2. Frame Access:
+```cpp
+void func(int param) {
+    int local = 42;
+    // Access relative to ebp:
+    // param  = [ebp + 8]    // Above saved ebp
+    // local  = [ebp - 4]    // Below saved ebp
+}
+```
+
+3. Function Return:
+```nasm
+mov esp, ebp       ; Deallocate locals (restore stack)
+;  esp now points to saved ebp
+;
+pop ebp            ; Restore caller's base pointer
+;  ebp restored to caller's frame
+;  esp points to return address
+;
+ret                ; Pop return address and jump there
+;  Stack frame is gone, we're back in caller
+```
+
+Key Points:
+- Base Pointer (ebp):
+  - Frame reference point
+  - Stable during function execution
+  - Used to find parameters and locals
+
+- Stack Pointer (esp):
+  - Top of current stack
+  - Moves during push/pop operations
+  - Used for dynamic stack operations
+
+Think of it like building floors:
+```
+// Calling function:
+Ground Floor (Caller)
+    |
+    |  push ebp     // Save current floor number
+    |  mov ebp, esp // Mark new floor start
+    v
+First Floor (Callee)
+    |
+    |  sub esp, N   // Build floor space
+    v
+    [Local Variables Here]
+    
+// Returning:
+    ^
+    |  mov esp, ebp // Remove floor space
+    |  pop ebp      // Get old floor number
+    |  ret          // Go back down
+    |
+Ground Floor (Caller)
 ```
