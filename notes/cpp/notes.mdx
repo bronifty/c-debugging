@@ -1976,5 +1976,83 @@ When to use each:
 - Raw new: Rarely - mostly in low-level code or implementations of smart pointers
 ```
 
+### Stack vs Heap Allocation
 
+Q: What makes `int value = 42` a stack variable compared to pointer code?
 
+A: The key difference is how and where the memory is allocated:
+
+```cpp
+// Stack allocation:
+int value = 42;        // Directly allocated on stack frame
+                      // Automatically managed by scope
+
+// Heap allocation:
+int* ptr = new int(42);  // Requests memory from heap
+                        // Must be manually managed
+```
+
+Visual memory layout:
+```
+Stack Memory (LIFO):              Heap Memory:
++------------------+             +------------------+
+| value = 42       |             | 42 <- ptr       |
+| (function scope) |             | (manual manage) |
++------------------+             +------------------+
+| other stack vars |             | other heap data |
++------------------+             +------------------+
+```
+
+Key differences:
+1. Memory management:
+```cpp
+{
+    int value = 42;     // Stack: Auto-cleaned when scope ends
+    int* ptr = new int(42);  // Heap: Must call delete
+}  // value cleaned up here, ptr memory leaks!
+```
+
+2. Lifetime:
+```cpp
+// Stack - tied to scope
+void foo() {
+    int x = 42;  // Lives until end of foo()
+}  // x destroyed here
+
+// Heap - manual lifetime
+int* getNumber() {
+    return new int(42);  // Lives until explicitly deleted
+}  // Pointer goes away but allocated memory remains
+```
+
+3. Size:
+```cpp
+// Stack - usually limited (often ~1MB)
+void stackHeavy() {
+    int bigArray[1000000];  // Might cause stack overflow
+}
+
+// Heap - limited by system memory
+int* heapAlloc() {
+    return new int[1000000];  // OK if enough system memory
+}
+```
+
+4. Performance:
+```cpp
+// Stack - fast (just moves stack pointer)
+void fastAlloc() {
+    int x = 42;        // Very fast
+    Point p{1, 2};     // Also fast
+}
+
+// Heap - slower (memory allocation)
+void slowerAlloc() {
+    auto p = new Point{1, 2};  // Must find free memory
+    delete p;                  // Must manage free list
+}
+```
+
+Think of it like:
+- Stack: Like a stack of plates - automatic and ordered
+- Heap: Like a storage room - flexible but needs management
