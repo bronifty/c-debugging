@@ -2262,3 +2262,70 @@ Key points:
 - LIFO (Last In First Out) order
 - Automatic cleanup on scope exit
 - Limited by stack size (~1MB-8MB typically)
+```
+
+### std::forward in Member Function Assignment
+
+Q: In Button.cpp, is std::forward assigning whatever function is passed in directly to onClick_? Does lvalue/rvalue matter here since it's being assigned not moved?
+
+```cpp
+template<typename F>
+void setHandler(F&& handler) {
+    onClick_ = std::forward<F>(handler);
+}
+```
+
+A: Let's break this down:
+
+1. What std::forward does here:
+```cpp
+// Perfect forwarding: preserves value category (lvalue/rvalue)
+void setHandler(F&& handler) {           // Universal reference
+    onClick_ = std::forward<F>(handler); // Preserves handler's type
+}
+
+// Without forward (might slice/copy):
+void setHandler(F&& handler) {
+    onClick_ = handler;  // Always treats handler as lvalue
+}
+```
+
+2. Assignment behavior depends on the lambda:
+```cpp
+// Stateless lambda - cheap to copy
+btn.setHandler([]() { cout << "Click!"; });
+
+// Stateful lambda - more expensive to copy
+int count = 0;
+btn.setHandler([count]() mutable { count++; });
+
+// Lambda with reference - only reference copied
+btn.setHandler([&count]() { count++; });
+```
+
+3. What's actually happening:
+```cpp
+// std::function assignment operator does the heavy lifting:
+std::function<void()> onClick_;  // Member variable
+
+// When assigned:
+onClick_ = some_lambda;  // Creates callable wrapper
+                        // Manages copied/moved state
+```
+
+Key points:
+- std::forward preserves value category
+- std::function handles the actual storage
+- Lambda is typically copied into std::function
+- Forward mainly matters for perfect forwarding chains
+- Final assignment to onClick_ always makes a copy/move into std::function storage
+
+Think of it like:
+```cpp
+// The chain:
+setHandler(lambda)  -> std::forward -> std::function::operator=
+//    ^                    ^                    ^
+//    |                    |                    |
+// Takes universal    Preserves type      Creates wrapper
+// reference         for forwarding      and stores copy
+```
