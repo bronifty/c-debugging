@@ -1679,6 +1679,13 @@ class IndependentView {
 };
 ```
 
+Key points:
+- References must point to valid objects
+- Referenced object must outlive the reference
+- Class holding reference depends on referenced object's lifetime
+- Consider ownership alternatives for complex lifetime requirements
+```
+
 ### Dangling References
 
 Q: Why is this a dangling reference?
@@ -1733,12 +1740,15 @@ int stack_val = 42;
 int& ref = stack_val;  // Reference to stack variable
 ```
 
-Key points:
-- References must point to valid memory
-- Can't reassign references to point elsewhere
-- Deleting referenced memory creates dangling reference
-- Reference continues to exist after delete
-- Using dangling reference is undefined behavior
+Best practice:
+```cpp
+// Instead of raw new/delete:
+std::shared_ptr<int> ptr = std::make_shared<int>(42);
+int& ref = *ptr;  // Safe - memory managed by shared_ptr
+
+// Or better, avoid heap if possible:
+int value = 42;
+int& ref = value;  // Reference to stack variable
 ```
 
 ### Reference Member Lifetimes
@@ -1887,6 +1897,78 @@ int& ref = *ptr;  // Safe - memory managed by shared_ptr
 // Or better, avoid heap if possible:
 int value = 42;
 int& ref = value;  // Reference to stack variable
+```
+
+### Object Creation in C++
+
+Q: In `int& dangling_ref = *new int(42)`, this uses the new keyword to allocate memory for a new pointer. Are there other ways to create objects? Can we instantiate without new?
+
+A: Yes! In C++, there are several ways to create objects:
+
+1. Stack Allocation (No new):
+```cpp
+// Direct initialization
+int x(42);              // Stack allocated
+Point p(1, 2);         // Stack allocated object
+
+// Copy initialization
+int y = 42;            // Stack allocated
+Point q = Point(1, 2); // Stack allocated object
+
+// Uniform initialization (modern C++)
+int z{42};             // Stack allocated
+Point r{1, 2};         // Stack allocated object
+```
+
+2. Heap Allocation (with new):
+```cpp
+// Returns pointer to heap memory
+int* px = new int(42);        // Must delete later
+Point* pp = new Point(1, 2);  // Must delete later
+
+// Smart pointers (modern way)
+auto sp = std::make_unique<Point>(1, 2);  // Auto-deleted
+auto sp2 = std::make_shared<Point>(1, 2); // Reference counted
+```
+
+Key differences:
+```cpp
+// Stack allocation:
+{
+    Point p(1, 2);     // Automatically destroyed at end of scope
+}                      // Destructor called here
+
+// Heap allocation:
+{
+    Point* p = new Point(1, 2);  // Lives beyond scope
+    // Must manually delete:
+    delete p;                    // Or memory leak!
+}
+```
+
+Best practices:
+```cpp
+// Prefer stack allocation when possible:
+void process() {
+    Point p{1, 2};     // Simple, automatic cleanup
+}
+
+// Use smart pointers for heap when needed:
+void process() {
+    auto p = std::make_unique<Point>(1, 2);  // Safe heap allocation
+}
+
+// Avoid raw new/delete:
+void process() {
+    Point* p = new Point(1, 2);  // Dangerous - manual memory management
+    delete p;                    // Must remember to delete
+}
+```
+
+When to use each:
+- Stack: For objects with clear scope/lifetime
+- Smart Pointers: For objects that need to outlive current scope
+- Raw new: Rarely - mostly in low-level code or implementations of smart pointers
 ```
 
 
