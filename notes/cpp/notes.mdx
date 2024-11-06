@@ -1602,8 +1602,6 @@ void process(const Widget& w);  // Borrow for function duration
 
 class Handler {
     Widget& widget_;  // Borrow as class member
-public:
-    Handler(Widget& w) : widget_(w) {}  // Borrow in constructor
 };
 ```
 
@@ -1678,6 +1676,68 @@ class SafeView {
 
 // 4. Use references for "views" into data
 void print_slice(string_view s);  // Temporary view into string
+```
+
+### Dangling References
+
+Q: Why is this a dangling reference?
+```cpp
+int& dangling_ref = *new int(42);  // Creates reference to heap memory
+delete &dangling_ref;              // Deletes the memory but reference still exists!
+```
+
+A: This creates a dangerous dangling reference because:
+
+1. Memory lifecycle:
+```cpp
+// Step by step:
+int* ptr = new int(42);     // Allocates heap memory
+int& ref = *ptr;            // Reference to heap memory
+delete ptr;                 // Frees memory
+// ref is now dangling - points to freed memory!
+```
+
+2. What makes it dangerous:
+```cpp
+int& dangling_ref = *new int(42);
+cout << dangling_ref;  // Works (42)
+delete &dangling_ref;  // Frees memory
+cout << dangling_ref;  // UNDEFINED BEHAVIOR - memory is freed!
+```
+
+Visual representation:
+```
+Before delete:
+dangling_ref → [42]  (heap memory)
+
+After delete:
+dangling_ref → [????]  (freed memory)
+```
+
+Safe alternatives:
+```cpp
+// 1. Use smart pointers
+std::shared_ptr<int> safe_ptr = std::make_shared<int>(42);
+int& safe_ref = *safe_ptr;  // Reference valid as long as ptr exists
+
+// 2. Ensure proper ownership
+class Owner {
+    int value_;
+public:
+    int& get_ref() { return value_; }  // Safe - refers to member
+};
+
+// 3. Stack allocation
+int stack_val = 42;
+int& safe_ref = stack_val;  // Safe - stack memory
+```
+
+Key points:
+- References must point to valid memory
+- Can't reassign references to point elsewhere
+- Deleting referenced memory creates dangling reference
+- Reference continues to exist after delete
+- Using dangling reference is undefined behavior
 ```
 
 
