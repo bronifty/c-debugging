@@ -572,7 +572,7 @@ head_ → [1] → nullptr
 ```
 Insert 2:
 ```
-head_ → [2] ��� [1] → nullptr
+head_ → [2]  [1] → nullptr
 ```
 Insert 3:
 ```
@@ -2159,3 +2159,106 @@ Key points:
 - Capture by reference must ensure referenced variables stay alive
 - mutable keyword allows modification of captured values
 - Be careful with lifetime of captured references
+```
+
+### Stack Pointer and Memory Layout
+
+Q: Can you explain more about how the stack pointer works in this example?
+```cpp
+// Stack - fast (just moves stack pointer)
+void fastAlloc() {
+    int x = 42;        // Very fast
+    Point p{1, 2};     // Also fast
+}
+```
+
+A: The stack pointer (SP) is a CPU register that tracks the top of the stack. Let's see how it works in detail:
+
+Stack Memory Operations:
+```cpp
+void example() {
+    // SP starts here
+    // |
+    // v
+    int x = 42;        // SP moves down by sizeof(int)
+    Point p{1, 2};     // SP moves down by sizeof(Point)
+    string s = "hello"; // SP moves down by sizeof(string)
+    // ^
+    // SP ends here
+}  // SP moves back up (stack unwinds)
+```
+
+Visual Stack Growth:
+```
+Before function:          After allocations:
++----------------+       +----------------+
+|                |       | string s       | <- SP after
++----------------+       +----------------+
+|                |       | Point p        |
++----------------+       +----------------+
+|                |       | int x          |
++----------------+ <- SP +----------------+
+| previous frame |       | previous frame |
++----------------+       +----------------+
+```
+
+Why it's fast:
+```cpp
+// Stack allocation:
+{
+    int x = 42;    // Just subtract from SP
+                   // No searching for free memory
+                   // No fragmentation handling
+}                  // Just add to SP
+
+// vs Heap allocation:
+{
+    int* p = new int(42);  // Must:
+                           // 1. Find free block
+                           // 2. Update free list
+                           // 3. Handle fragmentation
+    delete p;              // Must merge free blocks
+}
+```
+
+Stack Frame Layout:
+```cpp
+void func(int param) {
+    int local = 42;
+    // Stack frame looks like:
+    // +------------------+
+    // | local variables  |
+    // | (local)          |
+    // +------------------+
+    // | parameters       |
+    // | (param)          |
+    // +------------------+
+    // | return address   |
+    // +------------------+
+    // | previous frame   |
+    // +------------------+
+}
+```
+
+Stack Pointer Operations:
+```cpp
+// Function prologue (compiler generated)
+push ebp           // Save old base pointer
+mov ebp, esp       // Set up new base pointer
+sub esp, N         // Allocate N bytes for locals
+
+// Your code runs here
+
+// Function epilogue (compiler generated)
+mov esp, ebp       // Restore stack pointer
+pop ebp            // Restore base pointer
+ret                // Return to caller
+```
+
+Key points:
+- Stack pointer is just a register
+- Stack allocation = arithmetic on SP
+- No memory management overhead
+- LIFO (Last In First Out) order
+- Automatic cleanup on scope exit
+- Limited by stack size (~1MB-8MB typically)
