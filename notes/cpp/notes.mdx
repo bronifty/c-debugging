@@ -4302,6 +4302,730 @@ Key points demonstrated:
    - Can be constructed from any iterable range
 ```
 
+## Common Types
+
+### size_t
+`size_t` is an unsigned integer type that is used to represent sizes and counts. It's particularly important when working with container sizes and array indices.
+
+```cpp
+// Using size_t for array indexing
+for (size_t i = 0; i < vector.size(); ++i) {
+    // size_t is guaranteed to be big enough for any array index
+}
+```
+
+Key points about size_t:
+- Unsigned integer type (can't be negative)
+- Guaranteed to be large enough to contain the size of any object
+- Usually 32 bits on 32-bit systems, 64 bits on 64-bit systems
+- Preferred type for array indices and sizes
+- Returned by sizeof operator and container size() methods
+
+Why use size_t instead of int:
+```cpp
+vector<int> vec(1000000000);  // Large vector
+
+// Bad: int might overflow on some systems
+for (int i = 0; i < vec.size(); i++) { }
+
+// Good: size_t guaranteed to handle any valid size
+for (size_t i = 0; i < vec.size(); i++) { }
+```
+
+Common places you'll see size_t:
+- Container sizes: vector.size() returns size_t
+- Array indexing: array[size_t index]
+- Memory operations: sizeof returns size_t
+- String lengths: string::length() returns size_t
+```
+
+## Lambda Functions
+
+Q: Please explain this syntax:
+```cpp
+// store a lambda
+std::function<void()> f_display_42 = []() { print_num(42); };
+f_display_42();
+```
+
+A: Let's break down this lambda function syntax:
+
+```cpp
+std::function<void()>    // Type: function taking no args, returning void
+f_display_42 =          // Name of our function variable
+[]                     // Lambda introducer (capture clause)
+()                     // Parameter list (empty in this case)
+{ print_num(42); }     // Function body
+;                      // End of statement
+```
+
+Components of a lambda:
+1. std::function<return_type(param_types)>
+   - Modern C++ way to store function objects
+   - void() means "takes no parameters, returns nothing"
+
+2. Capture clause []
+   - Empty [] means capture nothing from outer scope
+   - [=] captures everything by value
+   - [&] captures everything by reference
+   - [x] captures x by value
+   - [&x] captures x by reference
+
+Examples of different lambda syntaxes:
+```cpp
+// No capture, no parameters
+auto f1 = []() { cout << "Hello"; };
+
+// Capture local variable by value
+int multiplier = 10;
+auto f2 = [multiplier](int x) { return x * multiplier; };
+
+// Capture by reference
+auto f3 = [&multiplier](int x) { multiplier = x; };  // Can modify multiplier
+
+// Specify return type explicitly
+auto f4 = [](int x) -> double { return x * 1.5; };
+
+// Store in std::function
+std::function<int(int)> f5 = [](int x) { return x * 2; };
+```
+
+Using the stored lambda:
+```cpp
+f_display_42();  // Calls the lambda just like a regular function
+
+// Or with parameters
+auto multiply = [](int x, int y) { return x * y; };
+int result = multiply(5, 3);  // result = 15
+```
+
+### std::function Type Syntax
+
+Q: Explain the std::function syntax for specifying parameter and return types?
+
+A: The std::function template uses angle brackets to specify the function signature:
+
+```cpp
+std::function<return_type(parameter_types)>
+```
+
+Examples:
+```cpp
+// Function taking int, returning int
+std::function<int(int)> f1 = [](int x) { return x * 2; };
+
+// Function taking no parameters, returning void
+std::function<void()> f2 = []() { cout << "Hello"; };
+
+// Function taking multiple parameters
+std::function<double(int, float)> f3 = [](int x, float y) { 
+    return x * y; 
+};
+
+// Function returning bool
+std::function<bool(string)> f4 = [](string s) { 
+    return s.empty(); 
+};
+```
+
+Breaking down the syntax:
+- Inside <...> is the complete function type
+- Before the parentheses: return type
+- Inside parentheses: parameter types
+- Empty parentheses () means no parameters
+
+Common patterns:
+```cpp
+std::function<void()>      // Takes nothing, returns nothing
+std::function<int(int)>    // Takes int, returns int
+std::function<void(int)>   // Takes int, returns nothing
+std::function<int()>       // Takes nothing, returns int
+```
+
+This is similar to regular function declarations, just wrapped in std::function<...>:
+```cpp
+// Regular function:
+int foo(int x) { return x * 2; }
+
+// As std::function:
+std::function<int(int)> foo = [](int x) { return x * 2; };
+```
+
+### Member Function Pointers
+
+Q: In this code, why do both function calls work? Shouldn't the second one error since it doesn't use a Foo object?
+```cpp
+// store a call to a member function
+std::function<void(const Foo&, int)> f_add_display = &Foo::print_add;
+const Foo foo(314159);
+f_add_display(foo, 1);           // Using Foo object
+f_add_display(314159, 1);        // Using temporary Foo object - why does this work?
+```
+
+A: Both calls work because of how C++ handles temporary objects. Let's break it down:
+
+1. The function type `void(const Foo&, int)` means:
+   - First parameter: const reference to Foo
+   - Second parameter: int
+   - Returns: void
+
+2. When you call `f_add_display(314159, 1)`:
+   - C++ creates a temporary Foo object using 314159
+   - The temporary object is bound to the const reference parameter
+   - After the call, the temporary object is destroyed
+
+It's equivalent to:
+```cpp
+// This:
+f_add_display(314159, 1);
+
+// Is similar to:
+const Foo temp(314159);  // Temporary object created
+f_add_display(temp, 1);  // Used in function call
+// temp is destroyed here
+```
+
+Key points:
+- Const references can bind to temporary objects
+- Non-const references cannot bind to temporaries (would error)
+- This is why const references are often used in parameters
+```cpp
+// This works - const reference can bind to temporary
+void foo(const string& s) { ... }
+foo(string("hello"));
+
+// This errors - non-const reference can't bind to temporary
+void bar(string& s) { ... }
+bar(string("hello"));  // Error!
+```
+
+### String Constructor Syntax
+
+Q: Please explain this syntax:
+```cpp
+foo(string("hello"));  // What's happening here?
+```
+
+A: This is creating a temporary string object using a string constructor. Let's break it down:
+
+```cpp
+string("hello")       // Constructor call creating temporary string
+foo(...)             // Passing temporary string to function
+```
+
+Different ways to create strings:
+```cpp
+// Direct initialization with constructor
+string str1("hello");           // Using constructor directly
+foo(string("hello"));          // Temporary object with constructor
+
+// Copy initialization with =
+string str2 = "hello";         // Implicit conversion from const char*
+foo(string = "hello");         // Same as above, but temporary
+
+// Modern brace initialization
+string str3{"hello"};          // Direct list initialization
+foo(string{"hello"});          // Temporary with brace initialization
+```
+
+When used in function calls:
+```cpp
+// These are equivalent:
+void foo(const string& s) { ... }
+
+foo(string("hello"));          // Explicit temporary
+foo("hello");                  // Implicit conversion to temporary string
+
+// Under the hood, the second call is converted to:
+foo(string("hello"));          // Compiler adds constructor call
+```
+
+Key points:
+- string("hello") calls the string constructor
+- Creates a temporary string object
+- Temporary object is destroyed after the expression
+- Often used when you need a string object but have a string literal
+
+### std::bind and Placeholders
+
+Q: Please explain this syntax:
+```cpp
+using std::placeholders::_1;
+std::function<void(int)> f_add_display2 = std::bind(&Foo::print_add, foo, _1);
+f_add_display2(2);
+```
+
+A: This code demonstrates std::bind, which creates a new function object by "binding" some arguments of an existing function. Let's break it down:
+
+1. Original member function:
+```cpp
+class Foo {
+    void print_add(int x);  // Takes 2 things: implicit this pointer and int
+};
+```
+
+2. Binding syntax:
+```cpp
+std::bind(&Foo::print_add,  // Member function to bind
+          foo,              // Object to bind as 'this'
+          _1)              // Placeholder for argument to remain unbound
+```
+
+What's happening:
+- &Foo::print_add is a pointer to the member function
+- foo is bound as the object (this)
+- _1 is a placeholder saying "first argument will be provided later"
+- Result is a function that only needs the int parameter
+
+Example with different bindings:
+```cpp
+// Bind both object and parameter
+auto f1 = std::bind(&Foo::print_add, foo, 42);
+f1();  // Calls foo.print_add(42)
+
+// Bind just object
+auto f2 = std::bind(&Foo::print_add, foo, _1);
+f2(42);  // Calls foo.print_add(42)
+
+// Bind just parameter
+auto f3 = std::bind(&Foo::print_add, _1, 42);
+f3(foo);  // Calls foo.print_add(42)
+```
+
+Placeholders:
+- _1, _2, _3, etc. represent future arguments
+- Order matches the order of arguments in the call
+```cpp
+// For a two-parameter function
+void func(int x, int y);
+
+auto bound = std::bind(func, _2, _1);  // Swaps argument order
+bound(5, 3);  // Calls func(3, 5)
+```
+
+Modern alternative:
+In modern C++, lambda expressions are often preferred over std::bind:
+```cpp
+// Instead of bind:
+auto f = std::bind(&Foo::print_add, foo, _1);
+
+// Equivalent lambda:
+auto f = [&foo](int x) { foo.print_add(x); };
+```
+
+### Conditional Lambda Types
+
+A lambda's type is unique and unnamed - it's a closure type created by the compiler. However, we can store lambdas in different ways depending on our needs:
+
+```cpp
+// 1. Using auto (preferred when possible)
+auto lambda = [](int x) { return x * 2; };
+
+// 2. Using std::function (when type erasure is needed)
+std::function<int(int)> func = [](int x) { return x * 2; };
+
+// 3. Using template parameters (most flexible)
+template<typename F>
+void executeFunction(F&& func) {
+    func(42);
+}
+```
+
+Key differences:
+```cpp
+// auto preserves the exact lambda type
+auto l1 = [capture](params) { /* ... */ };  // Most efficient
+
+// std::function erases the type but is more flexible
+std::function<return_type(param_types)> l2 = [](params) { /* ... */ };
+
+// Conditional storage based on lambda type
+using Handler = std::conditional_t<condition,
+    std::function<void(int)>,    // if condition is true
+    std::function<void(double)>  // if condition is false
+>;
+```
+
+Example of conditional lambda types:
+```cpp
+template<bool UseInt>
+class Processor {
+    using Handler = std::conditional_t<UseInt,
+        std::function<void(int)>,     // When UseInt is true
+        std::function<void(double)>   // When UseInt is false
+    >;
+    
+    Handler handler_;
+
+public:
+    Processor() {
+        if constexpr (UseInt) {
+            handler_ = [](int x) { /* handle int */ };
+        } else {
+            handler_ = [](double x) { /* handle double */ };
+        }
+    }
+};
+```
+
+When to use each:
+- auto: When you know the lambda type at compile time
+- std::function: When you need type erasure or polymorphic behavior
+- std::conditional_t: When you need to choose the lambda type based on a condition
+- Template parameters: When you want maximum flexibility and performance
+```
+
+### if constexpr
+
+Q: Explain this syntax:
+```cpp
+if constexpr (UseInt) {
+    handler_ = [](int x) { /* handle int */ };
+} else {
+    handler_ = [](double x) { /* handle double */ };
+}
+```
+
+A: if constexpr is a compile-time conditional that evaluates at compile time rather than runtime. Let's break it down:
+
+1. Regular if vs if constexpr:
+```cpp
+// Runtime if - both branches compiled
+if (value) {
+    doThing();  // Checked at runtime
+}
+
+// Compile-time if - only true branch compiled
+if constexpr (UseInt) {
+    doThing();  // Decided at compile time
+}
+```
+
+2. How it works:
+- Evaluates the condition at compile time
+- Only compiles the branch that matches
+- Other branch is discarded during compilation
+- Must use a compile-time constant condition
+
+Example usage:
+```cpp
+template<typename T>
+void process(T value) {
+    if constexpr (std::is_integral_v<T>) {
+        // This code only compiled for integer types
+        handleInteger(value);
+    } else {
+        // This code only compiled for non-integer types
+        handleOther(value);
+    }
+}
+```
+
+Common use cases:
+```cpp
+// Template specialization
+template<typename T>
+class Handler {
+    void handle() {
+        if constexpr (std::is_same_v<T, int>) {
+            // Int-specific code
+        } else if constexpr (std::is_same_v<T, double>) {
+            // Double-specific code
+        }
+    }
+};
+
+// Compile-time optimization
+if constexpr (sizeof(void*) == 8) {
+    // 64-bit specific code
+} else {
+    // 32-bit specific code
+}
+```
+
+Key points:
+- Evaluated at compile time
+- Condition must be compile-time constant
+- Unused branches are not compiled
+- Helps with template metaprogramming
+- Can reduce binary size by eliminating unused code
+```
+
+### Erase-Remove Idiom
+
+Q: Explain this syntax:
+```cpp
+point_vector.erase(
+    std::remove_if(point_vector.begin(), point_vector.end(),
+                   [](const Point &point) { return point.GetX() == 37; }),
+    point_vector.end());
+```
+
+A: This is the erase-remove idiom, a common pattern for removing elements from containers. Let's break it down:
+
+1. std::remove_if does two things:
+   - Moves elements that don't match the condition to the front
+   - Returns iterator to new logical end
+   - Doesn't actually delete anything
+
+2. vector.erase then deletes the unwanted elements:
+   - Takes range from remove_if's returned iterator to end
+   - Actually frees the memory
+
+Example of how it works:
+```cpp
+vector<int> v = {1, 2, 3, 2, 4};
+
+// Want to remove all 2s
+// 1. remove_if moves non-2s to front:
+// [1, 3, 4, 2, 4]  <- returns iterator to first 2
+//           ^
+// 2. erase deletes from ^ to end
+// Result: [1, 3, 4]
+```
+
+The lambda predicate:
+```cpp
+[](const Point &point) { return point.GetX() == 37; }
+//                              ^ returns true for elements to remove
+```
+
+Alternative ways to write it:
+```cpp
+// Using separate steps
+auto new_end = std::remove_if(vec.begin(), vec.end(), predicate);
+vec.erase(new_end, vec.end());
+
+// Using algorithm
+vec.erase(
+    std::remove_if(vec.begin(), vec.end(), predicate),
+    vec.end()
+);
+```
+
+Key points:
+- remove_if doesn't actually remove elements
+- It partitions them and returns iterator to new end
+- erase does the actual memory deallocation
+- This two-step process is more efficient than removing one by one
+```
+
+### Remove-If Predicate Partitioning
+
+Q: Does std::remove_if partition a collection into true and false predicates, with erase removing the true ones?
+
+A: Yes, exactly! std::remove_if partitions elements based on the predicate:
+- Elements where predicate returns false are kept (moved to front)
+- Elements where predicate returns true are candidates for removal (moved to back)
+
+Example:
+```cpp
+vector<int> v = {1, 2, 3, 4, 5};
+
+// Predicate: remove even numbers (returns true for even)
+auto new_end = std::remove_if(v.begin(), v.end(),
+    [](int x) { return x % 2 == 0; });  // true for evens
+                                        // false for odds
+
+// After remove_if:
+// [1, 3, 5 | 4, 2]
+//          ^
+//          |_new_end
+// Left of | : predicate returned false (odds - keep these)
+// Right of |: predicate returned true (evens - will be erased)
+
+// After erase:
+v.erase(new_end, v.end());
+// [1, 3, 5]  // Only elements where predicate was false remain
+```
+
+The process:
+1. remove_if partitions based on predicate:
+   - false results → move to front (keep)
+   - true results → move to back (remove)
+2. Returns iterator (new_end) to start of "true" partition
+3. erase removes everything from new_end to end
+
+Think of it like:
+```cpp
+// Original:
+[1, 2, 3, 4, 5]
+
+// Partition by predicate (x % 2 == 0):
+[false, true, false, true, false]  // Predicate results
+
+// After remove_if:
+[1, 3, 5 | 4, 2]  // Partitioned by predicate result
+//        ^
+//        |_new_end (start of "true" partition)
+
+// After erase:
+[1, 3, 5]  // Only "false" partition remains
+```
+
+### Red-Black Trees and std::set
+
+Q: What is a Red-Black tree in the context of std::set?
+
+A: A Red-Black tree is a self-balancing binary search tree that std::set uses for its implementation. It ensures O(log n) operations by maintaining these properties:
+
+Key properties:
+```cpp
+1. Every node is either red or black
+2. Root is always black
+3. No two adjacent red nodes (red node cannot have red parent or children)
+4. Every path from root to leaf has same number of black nodes
+```
+
+Example of how std::set uses it:
+```cpp
+std::set<int> numbers = {4, 2, 5, 1, 3};
+
+// Internally stored as balanced tree:
+//     2B
+//    /  \
+//   1B   4R
+//      /   \
+//     3B    5B
+// (B = Black, R = Red)
+```
+
+Operations:
+```cpp
+// Insert - O(log n)
+numbers.insert(6);  // Tree rebalances if needed
+
+// Find - O(log n)
+auto it = numbers.find(3);  // Traverses tree
+
+// Delete - O(log n)
+numbers.erase(4);  // Tree rebalances after deletion
+```
+
+Why std::set uses Red-Black trees:
+1. Guaranteed O(log n) operations:
+```cpp
+std::set<int> s;
+s.insert(x);      // O(log n)
+s.find(x);        // O(log n)
+s.erase(x);       // O(log n)
+```
+
+2. Always balanced:
+```cpp
+// Even with ordered insertions:
+set.insert(1);
+set.insert(2);
+set.insert(3);
+// Tree rebalances to prevent linear structure
+```
+
+3. Memory efficient:
+```cpp
+// Only needs color bit and pointers:
+struct Node {
+    T value;
+    bool is_black;
+    Node* left;
+    Node* right;
+    Node* parent;
+};
+```
+
+Common use cases:
+```cpp
+// Maintaining sorted unique elements
+std::set<string> words;
+words.insert("apple");
+words.insert("banana");  // Automatically stays sorted
+
+// Efficient lookup
+if (words.find("apple") != words.end()) {
+    // Found in O(log n) time
+}
+
+// Range queries
+auto start = words.lower_bound("b");
+auto end = words.upper_bound("c");
+// Efficiently finds all elements in range [b,c]
+```
+
+### std::set Example Explained
+
+Let's break down this example code:
+```cpp
+// Custom output operator for sets
+template<typename T>
+std::ostream& operator<<(std::ostream& out, const std::set<T>& set)
+{
+    if (set.empty())
+        return out << "{}";
+    
+    // Print first element without comma
+    out << "{ " << *set.begin();
+    
+    // Print remaining elements with leading comma
+    std::for_each(std::next(set.begin()), set.end(), 
+        [&out](const T& element) {
+            out << ", " << element;
+        });
+    
+    return out << " }";
+}
+
+// Main examples of set operations
+int main() {
+    // Create and initialize set
+    std::set<int> set{1, 5, 3};  // Auto-sorts to {1, 3, 5}
+    std::cout << set << '\n';    // Prints "{ 1, 3, 5 }"
+
+    // Insert new element
+    set.insert(2);               // Inserts in sorted position
+    std::cout << set << '\n';    // Prints "{ 1, 2, 3, 5 }"
+
+    // Remove element
+    set.erase(1);
+    std::cout << set << "\n\n";  // Prints "{ 2, 3, 5 }"
+
+    // Check for element existence
+    std::set<int> keys{3, 4};    // Elements to search for
+    for (int key : keys) {
+        if (set.contains(key))   // C++20 contains() method
+            std::cout << set << " does contain " << key << '\n';
+        else
+            std::cout << set << " doesn't contain " << key << '\n';
+    }
+
+    // Create set from string characters
+    std::string_view word = "element";
+    std::set<char> characters(word.begin(), word.end());
+    // Creates set of unique chars: {e, l, m, n, t}
+    
+    std::cout << "There are " << characters.size() 
+              << " unique characters in " << std::quoted(word)
+              << ":\n" << characters << '\n';
+}
+```
+
+Key points demonstrated:
+1. Set properties:
+   - Automatically sorts elements
+   - Stores only unique values
+   - O(log n) operations
+
+2. Common operations:
+   - insert(): Adds element in sorted position
+   - erase(): Removes element
+   - contains(): Checks if element exists
+   - Construction from iterator range
+
+3. Set characteristics:
+   - Elements are immutable (can't modify in place)
+   - Always maintains sorted order
+   - Automatically handles duplicates (ignores them)
+   - Can be constructed from any iterable range
+```
+
 ### Factory Functions
 
 Q: Is this a factory function?
@@ -4353,6 +5077,57 @@ Key advantages:
 - Enables type inference with auto
 - Can hide implementation details
 - Makes code more readable and maintainable
+```
+
+### std::move and Function Parameters
+
+Q: Does std::move(s2) move s2 into a temp pointer, make the update and move it back? Where does the rvalue data go if the function doesn't have an internal pointer?
+
+A: No, std::move doesn't actually move anything - it just casts s2 to an rvalue reference. The actual moving happens in the function that receives the rvalue reference. Let's break it down:
+
+```cpp
+// This call:
+modify_ptr_via_rvalue_ref(std::move(s2));
+
+// Is equivalent to:
+modify_ptr_via_rvalue_ref(static_cast<shared_ptr<int>&&>(s2));
+```
+
+What's happening:
+1. std::move just performs the cast
+2. The function receives the rvalue reference:
+```cpp
+void modify_ptr_via_rvalue_ref(shared_ptr<int>&& ptr) {
+    // ptr is now an rvalue reference to s2
+    // We can steal s2's resources directly
+    ptr.reset(new int(100));  // Modifies s2 directly
+}
+```
+
+Key points:
+- No temporary pointer is created
+- The function works directly with s2 through the rvalue reference
+- std::move just gives permission to steal/modify the original
+- The actual moving/modification happens in the function
+
+Compare with lvalue reference:
+```cpp
+// Lvalue reference - can modify but can't move from
+void modify_ptr_via_ref(shared_ptr<int>& ptr) {
+    ptr.reset(new int(100));  // Modifies original
+}
+
+// Rvalue reference - can both modify and move from
+void modify_ptr_via_rvalue_ref(shared_ptr<int>&& ptr) {
+    ptr.reset(new int(100));  // Modifies original
+    // Could also move from ptr if needed
+}
+```
+
+Think of it like:
+- std::move is like putting a "moveable" label on s2
+- The function gets direct access to modify/steal from s2
+- No copying or temporary storage needed
 ```
 
 
