@@ -2482,3 +2482,74 @@ void storing_func(std::shared_ptr<Point> point) {
 
 This behavior is by design - temporary copies in function parameters don't affect the lifetime management of the original shared pointer.
 
+### Threads and Join
+
+Q: What does this code do, and what is join()?
+```cpp
+std::thread t2(add_count);  // Create new thread running add_count function
+t1.join();                  // Wait for t1 to finish
+```
+
+A: Let's break this down:
+
+1. Thread Creation:
+```cpp
+std::thread t2(add_count);  // Creates new thread that will run add_count()
+// Main thread continues executing while t2 runs in parallel
+```
+
+2. Join Operation:
+```cpp
+t1.join();  // Main thread waits here until t1 finishes execution
+// Think of join() like waiting for a child process to complete
+```
+
+Example of thread execution:
+```cpp
+void add_count() {
+    // Some work here
+}
+
+int main() {
+    std::thread t1(add_count);  // Start thread
+    
+    // Main thread continues here in parallel
+    
+    t1.join();  // Wait for t1 to finish
+    // Only continues past here when t1 is done
+}
+```
+
+Key points about join():
+- Blocks calling thread until joined thread completes
+- Must either join() or detach() every thread
+- join() can only be called once per thread
+- Not calling either leads to program termination (std::terminate)
+
+Common patterns:
+```cpp
+// Multiple threads
+std::thread t1(func1);
+std::thread t2(func2);
+
+t1.join();  // Wait for t1
+t2.join();  // Wait for t2
+
+// Thread with arguments
+std::thread t3(func3, arg1, arg2);  // Pass args to thread function
+t3.join();
+
+// RAII thread wrapper
+class ThreadGuard {
+    std::thread t_;
+public:
+    explicit ThreadGuard(std::thread t) : t_(std::move(t)) {}
+    ~ThreadGuard() { if(t_.joinable()) t_.join(); }
+};
+```
+
+Think of join() like:
+- A parent waiting for a child to finish a task
+- A checkpoint where parallel execution becomes sequential again
+- A synchronization point between threads
+
