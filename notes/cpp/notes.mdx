@@ -2581,44 +2581,37 @@ class ThreadGuard {
     std::thread t_;
 public:
     explicit ThreadGuard(std::thread t)  // Prevents implicit conversion
-        : t_(std::move(t)) {}           // Takes thread by value, then moves it
+        : t_(std::move(t)) {}           // Move is separate from explicit
 };
 ```
 
 The explicit keyword:
-- Prevents implicit type conversions
-- Forces users to be explicit about construction
-- Example of what it prevents:
-```cpp
-// Without explicit:
-ThreadGuard guard = std::thread(func);  // Would allow implicit conversion
+- Just prevents implicit type conversions
+- Doesn't affect how parameters are passed
+- Works at class constructor level
+  ```cpp
+  // Without explicit:
+  ThreadGuard g = std::thread(func);  // Implicit conversion allowed
+  
+  // With explicit:
+  ThreadGuard g(std::thread(func));   // Must construct explicitly
+  ```
 
-// With explicit:
-ThreadGuard guard(std::thread(func));   // Must be explicit
-```
+- std::forward:
+  - Preserves value category (lvalue/rvalue) in templates
+  - Used with universal references (T&&)
+  - Works at function parameter level
+  ```cpp
+  template<typename T>
+  void wrapper(T&& arg) {
+      foo(std::forward<T>(arg));  // Preserves arg's value category
+  }
+  ```
 
-3. About the move operation:
-```cpp
-explicit ThreadGuard(std::thread t)  // t is taken by value
-    : t_(std::move(t))              // then moved into member
-```
-
-Why it works this way:
-- Parameter t is already a value (copied or moved from caller)
-- std::move(t) moves from this parameter into the member t_
-- Common pattern: take by value, then move
-- Allows both:
-```cpp
-std::thread t(func);
-ThreadGuard g1(t);                    // Takes lvalue
-ThreadGuard g2(std::thread(func));    // Takes rvalue
-```
-
-This is called "pass by value, move from parameter" idiom:
-- Simplifies interface (one function instead of two)
-- Still efficient with move semantics
-- Works with both lvalues and rvalues
-```
+The ThreadGuard constructor uses:
+- explicit: To prevent implicit conversions
+- std::move: To transfer ownership
+- Neither of these is related to perfect forwarding
 
 ### ThreadGuard Constructor Design
 
@@ -2748,4 +2741,57 @@ This pattern is safe because:
 - Final owner (member t_) gets exclusive ownership
 - Original thread (if from lvalue) is properly emptied
 ```
+
+### explicit vs std::forward
+
+Q: Is explicit for parameter l/r value similar to std::forward in that it takes a variable type and does perfect forwarding?
+
+A: No, they serve different purposes:
+
+1. explicit keyword:
+```cpp
+class ThreadGuard {
+    std::thread t_;
+public:
+    explicit ThreadGuard(std::thread t)  // Just prevents implicit conversion
+        : t_(std::move(t)) {}           // Move is separate from explicit
+};
+```
+
+2. std::forward:
+```cpp
+template<typename T>
+void setHandler(T&& handler) {          // Universal reference
+    onClick_ = std::forward<T>(handler); // Preserves value category
+}
+```
+
+Key differences:
+- explicit:
+  - Just prevents implicit type conversions
+  - Doesn't affect how parameters are passed
+  - Works at class constructor level
+  ```cpp
+  // Without explicit:
+  ThreadGuard g = std::thread(func);  // Implicit conversion allowed
+  
+  // With explicit:
+  ThreadGuard g(std::thread(func));   // Must construct explicitly
+  ```
+
+- std::forward:
+  - Preserves value category (lvalue/rvalue) in templates
+  - Used with universal references (T&&)
+  - Works at function parameter level
+  ```cpp
+  template<typename T>
+  void wrapper(T&& arg) {
+      foo(std::forward<T>(arg));  // Preserves arg's value category
+  }
+  ```
+
+The ThreadGuard constructor uses:
+- explicit: To prevent implicit conversions
+- std::move: To transfer ownership
+- Neither of these is related to perfect forwarding
 
