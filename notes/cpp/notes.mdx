@@ -1718,8 +1718,8 @@ dangling_ref → [????]  (freed memory)
 Safe alternatives:
 ```cpp
 // 1. Use smart pointers
-std::shared_ptr<int> safe_ptr = std::make_shared<int>(42);
-int& safe_ref = *safe_ptr;  // Reference valid as long as ptr exists
+std::shared_ptr<int> ptr = std::make_shared<int>(42);
+int& ref = *ptr;  // Reference valid as long as ptr exists
 
 // 2. Ensure proper ownership
 class Owner {
@@ -1730,7 +1730,7 @@ public:
 
 // 3. Stack allocation
 int stack_val = 42;
-int& safe_ref = stack_val;  // Safe - stack memory
+int& ref = stack_val;  // Reference to stack variable
 ```
 
 Key points:
@@ -1817,6 +1817,76 @@ Key points:
 - Referenced object must outlive the reference
 - Class holding reference depends on referenced object's lifetime
 - Consider ownership alternatives for complex lifetime requirements
+```
+
+### new Operator and Dereferencing
+
+Q: In `int& dangling_ref = *new int(42)`, is `*new` meaning pointer or create new object like in JavaScript?
+
+A: Let's break down this syntax step by step:
+
+```cpp
+int& dangling_ref = *new int(42);
+//                  ^ ^    ^  ^
+//                  | |    |  value to initialize
+//                  | |    type to allocate
+//                  | new operator (allocates memory)
+//                  dereference operator (get value at address)
+```
+
+What's happening:
+1. `new int(42)`:
+   - Allocates memory for an int
+   - Initializes it with 42
+   - Returns pointer to allocated memory
+
+2. `*` dereferences that pointer:
+   - Gets the value at the memory address
+   - Creates reference to that value
+
+Full breakdown:
+```cpp
+// These steps happen:
+new int(42)      // Returns int* pointing to heap memory
+*(new int(42))   // Dereferences pointer to get int value
+int& ref = ...   // Creates reference to that value
+
+// More clear way to write it:
+int* ptr = new int(42);  // Store pointer
+int& ref = *ptr;         // Create reference to value
+```
+
+Different from JavaScript:
+```js
+// JavaScript new:
+new Object()     // Creates and returns new object
+
+// C++ new:
+new Object       // Allocates memory and returns pointer
+```
+
+Why it's dangerous:
+```cpp
+// Problem: No pointer stored to delete memory later
+int& ref = *new int(42);  // Memory allocated but pointer lost
+                         // Can only get pointer back with &ref
+
+// Safe version:
+int* ptr = new int(42);   // Keep pointer
+int& ref = *ptr;          // Reference value
+// ... use ref ...
+delete ptr;               // Clean up memory
+```
+
+Best practice:
+```cpp
+// Instead of raw new/delete:
+std::shared_ptr<int> ptr = std::make_shared<int>(42);
+int& ref = *ptr;  // Safe - memory managed by shared_ptr
+
+// Or better, avoid heap if possible:
+int value = 42;
+int& ref = value;  // Reference to stack variable
 ```
 
 
