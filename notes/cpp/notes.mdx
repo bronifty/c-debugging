@@ -2795,3 +2795,71 @@ The ThreadGuard constructor uses:
 - std::move: To transfer ownership
 - Neither of these is related to perfect forwarding
 
+### Multiple Thread Join Pattern
+
+Q: What is the purpose of the join() calls in this reader-writer lock example?
+```cpp
+int main() {
+  std::thread t1(read_value);
+  std::thread t2(write_value);
+  std::thread t3(read_value);
+  std::thread t4(read_value);
+  std::thread t5(write_value);
+  std::thread t6(read_value);
+
+  t1.join();
+  t2.join();
+  t3.join();
+  t4.join();
+  t5.join();
+  t6.join();
+}
+```
+
+A: The join() calls serve several critical purposes here:
+
+1. Thread Lifecycle Management:
+```cpp
+// Without joins:
+int main() {
+    std::thread t1(read_value);
+    // Program might end before t1 finishes!
+}  // Calls std::terminate if thread not joined/detached
+
+// With joins:
+int main() {
+    std::thread t1(read_value);
+    t1.join();  // Ensures t1 completes before program ends
+}
+```
+
+2. Synchronization:
+- Ensures all reader/writer threads complete their operations
+- Prevents program from ending while threads are still accessing shared data
+- Maintains thread safety with the shared mutex and count variable
+
+3. Resource Cleanup:
+```cpp
+std::shared_mutex m;      // Shared between threads
+int count = 0;           // Shared data
+
+void read_value() {
+    std::shared_lock lk(m);  // Reader lock
+    std::cout << count << std::endl;
+}  // Lock released here
+
+// join() ensures all locks are released properly
+```
+
+Think of join() here like:
+- A safety barrier ensuring all threads finish
+- A cleanup checkpoint for shared resources
+- A way to prevent premature program termination
+- A guarantee that all read/write operations complete
+
+Without the joins:
+- Program might end while threads are still running
+- Shared data access could be cut off mid-operation
+- Mutex locks might not be properly released
+- std::terminate would be called (program crash)
+
