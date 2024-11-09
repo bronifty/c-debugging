@@ -3,7 +3,7 @@
   "name": "Existing Dockerfile",
   "build": {
     "context": "..",
-    "dockerfile": "../Dockerfile.local"
+    "dockerfile": "Dockerfile.devcontainer"
   },
   "customizations": {
     "vscode": {
